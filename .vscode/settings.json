@@ -1,0 +1,13 @@
+{
+  "kiro.customModels": [
+    {
+      "id": "deepseek-chat",
+      "name": "DeepSeek Chat",
+      "provider": "openai-compatible",
+      "apiKey": "sk-0c9ca0f336da4356bb3cef81cb9cd408",
+      "endpoint": "https://api.deepseek.com/v1",
+      "modelId": "deepseek-chat"
+    }
+  ],
+  "kiro.creativeModel": "deepseek-chat"
+}

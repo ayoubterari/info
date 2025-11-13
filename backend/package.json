@@ -1,0 +1,17 @@
+{
+  "name": "info-backend",
+  "version": "1.0.0",
+  "description": "Backend Convex pour l'application Info",
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy"
+  },
+  "dependencies": {
+    "convex": "^1.14.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.0.0"
+  }
+}
