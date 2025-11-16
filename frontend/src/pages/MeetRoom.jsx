@@ -12,7 +12,7 @@ import {
 } from '@stream-io/video-react-sdk'
 import '@stream-io/video-react-sdk/dist/css/styles.css'
 import Header from '../components/Header'
-import { Loader2, Video, Phone, Mic, MicOff, VideoIcon, VideoOff, Monitor, PhoneOff, Settings, Clock } from 'lucide-react'
+import { Loader2, Video, Phone, Mic, MicOff, VideoIcon, VideoOff, Monitor, PhoneOff, Settings, Clock, AlertTriangle } from 'lucide-react'
 
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY
 
@@ -191,14 +191,35 @@ function MeetingUI({ onEndCall, duration }) {
   const [timeRemaining, setTimeRemaining] = useState(duration ? duration * 60 : null) // Convertir minutes en secondes
   const [isTimerWarning, setIsTimerWarning] = useState(false)
   const [timerStarted, setTimerStarted] = useState(false)
+  
+  // Système de signalement de scam
+  const [scamReported, setScamReported] = useState(false)
+  const [showScamButton, setShowScamButton] = useState(false)
+  const initialDuration = duration ? duration * 60 : null
+  const scamWindowDuration = initialDuration ? initialDuration * 0.25 : null // 25% de la durée
 
   // Démarrer le timer uniquement quand les 2 participants sont présents
   useEffect(() => {
     if (participantCount >= 2 && !timerStarted && timeRemaining) {
       console.log('🎬 Les 2 participants sont présents, démarrage du timer!')
       setTimerStarted(true)
+      setShowScamButton(true) // Afficher le bouton de scam
     }
   }, [participantCount, timerStarted, timeRemaining])
+
+  // Gérer la fenêtre de signalement de scam (25% premiers)
+  useEffect(() => {
+    if (!timerStarted || !initialDuration || !timeRemaining) return
+    
+    const timeElapsed = initialDuration - timeRemaining
+    const scamWindowEnd = scamWindowDuration
+    
+    // Cacher le bouton après 25% de la durée
+    if (timeElapsed >= scamWindowEnd && showScamButton) {
+      console.log('⏰ Fenêtre de signalement de scam terminée')
+      setShowScamButton(false)
+    }
+  }, [timeRemaining, timerStarted, initialDuration, scamWindowDuration, showScamButton])
 
   // Gérer le compte à rebours (ne démarre que si timerStarted est true)
   useEffect(() => {
@@ -282,10 +303,56 @@ function MeetingUI({ onEndCall, duration }) {
     }
   }
 
+  const handleScamReport = () => {
+    const confirmed = window.confirm(
+      '⚠️ SIGNALEMENT DE SCAM\n\n' +
+      'Vous êtes sur le point de signaler cette session comme frauduleuse.\n' +
+      'La réunion sera immédiatement terminée et l\'incident sera enregistré.\n\n' +
+      'Êtes-vous sûr de vouloir continuer ?'
+    )
+    
+    if (confirmed) {
+      setScamReported(true)
+      alert('🚨 Session signalée comme scam. La réunion va se terminer immédiatement.')
+      // Terminer immédiatement la session
+      onEndCall()
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 relative">
         <SpeakerLayout />
+        
+        {/* Bouton de signalement de scam (visible pendant les 25% premiers) */}
+        {showScamButton && (
+          <div className="absolute top-4 left-4 z-10">
+            <button
+              onClick={handleScamReport}
+              className="group relative bg-red-600/90 hover:bg-red-700 backdrop-blur-sm px-4 py-3 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-pulse"
+              title="Signaler un scam"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🚨</span>
+                <div className="text-left">
+                  <div className="text-sm font-bold">Signaler un SCAM</div>
+                  <div className="text-xs opacity-90">
+                    Disponible pendant {Math.floor(scamWindowDuration / 60)} min
+                  </div>
+                </div>
+              </div>
+              {/* Indicateur de temps restant */}
+              <div className="absolute bottom-0 left-0 h-1 bg-white/30 w-full rounded-b-lg overflow-hidden">
+                <div 
+                  className="h-full bg-white transition-all duration-1000"
+                  style={{
+                    width: `${((scamWindowDuration - (initialDuration - timeRemaining)) / scamWindowDuration) * 100}%`
+                  }}
+                />
+              </div>
+            </button>
+          </div>
+        )}
         
         {/* Timer and Participant Count */}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
