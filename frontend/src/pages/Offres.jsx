@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api.js'
 import Header from '../components/Header'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Offres() {
   const navigate = useNavigate()
@@ -23,8 +23,8 @@ export default function Offres() {
       })
       
       if (status === 'accepted' && result?.meetSessionId) {
-        // Rediriger vers la page meet
-        navigate(`/meet/${result.meetSessionId}`)
+        // Rediriger vers la page de paiement
+        navigate(`/payment?offreId=${offreId}&sessionId=${result.meetSessionId}`)
       } else {
         alert(`Offre ${status === 'accepted' ? 'acceptée' : 'refusée'} avec succès!`)
       }

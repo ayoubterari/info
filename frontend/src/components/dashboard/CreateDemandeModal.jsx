@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../contexts/AuthContext'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import { Mic, MicOff, Upload, X, FileText } from 'lucide-react'
 
 export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const createDemande = useMutation(api.demandes.createDemande)
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
 
@@ -104,6 +106,13 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Vérifier l'authentification
+    if (!user?.userId) {
+      alert('Vous devez être connecté pour créer une demande')
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
@@ -136,7 +145,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
       }
 
       await createDemande({
-        userId: user?.userId,
+        userId: user.userId,
         title: formData.title,
         description: formData.description,
         category: formData.category,
@@ -154,6 +163,10 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
       
       onSuccess?.()
       onOpenChange(false)
+      
+      // Rediriger vers la page des offres
+      alert('Votre demande a été créée avec succès! Vous allez être redirigé vers la page des offres.')
+      navigate('/offres')
     } catch (error) {
       console.error('Error creating demande:', error)
       alert('Erreur lors de la création de la demande')
@@ -182,6 +195,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
               onChange={handleInputChange}
               placeholder="Ex: Besoin d'aide pour..."
               required
+              disabled={!user}
             />
           </div>
 
@@ -192,8 +206,9 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
               name="category"
               value={formData.category}
               onChange={handleInputChange}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
               required
+              disabled={!user}
             >
               {categories.map(cat => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -211,6 +226,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
               placeholder="Décrivez votre besoin en détail..."
               rows={4}
               required
+              disabled={!user}
             />
           </div>
 
@@ -226,6 +242,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
                 onChange={handleInputChange}
                 placeholder="Ex: 50.00"
                 required
+                disabled={!user}
               />
             </div>
 
@@ -240,6 +257,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
                 value={formData.duration}
                 onChange={handleInputChange}
                 placeholder="Ex: 30"
+                disabled={!user}
               />
             </div>
           </div>
@@ -253,6 +271,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
                   type="button"
                   variant={isRecording ? "destructive" : "outline"}
                   onClick={isRecording ? stopRecording : startRecording}
+                  disabled={!user}
                 >
                   {isRecording ? (
                     <><MicOff className="mr-2 h-4 w-4" /> Arrêter</>
@@ -279,6 +298,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={!user}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Ajouter des fichiers
@@ -315,8 +335,8 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Création...' : 'Créer la demande'}
+            <Button type="submit" disabled={isSubmitting || !user}>
+              {isSubmitting ? 'Création...' : !user ? 'Connectez-vous d\'abord' : 'Créer la demande'}
             </Button>
           </DialogFooter>
         </form>

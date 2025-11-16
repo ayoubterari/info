@@ -5,7 +5,7 @@ import { ArrowLeft, Heart, Clock, Tag, FileText, Mic, ChevronRight, DollarSign }
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import OfferModal from '../components/OfferModal'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Demandes() {
   const navigate = useNavigate()
@@ -31,7 +31,7 @@ export default function Demandes() {
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
-      in_progress: { label: 'En cours', color: 'bg-blue-100 text-blue-800' },
+      in_progress: { label: 'En cours', color: 'bg-gray-100 text-gray-800' },
       completed: { label: 'Terminée', color: 'bg-green-100 text-green-800' },
       cancelled: { label: 'Annulée', color: 'bg-gray-100 text-gray-800' },
     }

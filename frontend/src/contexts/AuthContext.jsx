@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api.js';
 
-export function useAuth() {
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Initialisé à true pour le chargement initial
+  const [loading, setLoading] = useState(true);
 
   const signUpMutation = useMutation(api.auth.signUp);
   const signInMutation = useMutation(api.auth.signIn);
@@ -20,7 +22,7 @@ export function useAuth() {
         localStorage.removeItem('user');
       }
     }
-    setLoading(false); // Fin du chargement initial
+    setLoading(false);
   }, []);
 
   const signUp = async ({ name, email, password }) => {
@@ -48,8 +50,7 @@ export function useAuth() {
     setLoading(true);
     try {
       const result = await signInMutation({ email, password });
-      console.log('🔍 [useAuth] Résultat de signInMutation:', result);
-      console.log('🔍 [useAuth] Rôle reçu:', result.role);
+      console.log('🔍 [AuthContext] Résultat de signInMutation:', result);
       
       const userData = {
         userId: result.userId,
@@ -58,10 +59,10 @@ export function useAuth() {
         role: result.role,
       };
       
-      console.log('🔍 [useAuth] userData créé:', userData);
+      console.log('🔍 [AuthContext] userData créé:', userData);
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      console.log('🔍 [useAuth] userData stocké dans localStorage');
+      console.log('🔍 [AuthContext] userData stocké et état mis à jour');
       
       return result;
     } catch (error) {
@@ -77,7 +78,7 @@ export function useAuth() {
     localStorage.removeItem('user');
   };
 
-  return {
+  const value = {
     user,
     loading,
     signUp,
@@ -85,4 +86,14 @@ export function useAuth() {
     signOut,
     isAuthenticated: !!user,
   };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
+  }
+  return context;
 }

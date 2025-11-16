@@ -6,8 +6,14 @@ export const chat = action({
   args: {
     prompt: v.string(),
     agentName: v.string(),
+    userId: v.id("users"), // Rendre userId obligatoire
   },
   handler: async (ctx, args) => {
+    // Vérifier que l'utilisateur est authentifié
+    if (!args.userId) {
+      throw new Error("Vous devez être connecté pour poser une question à l'IA");
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {

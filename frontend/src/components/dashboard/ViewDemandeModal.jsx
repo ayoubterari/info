@@ -146,8 +146,8 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
 
           {/* Informations supplémentaires */}
           <Separator />
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="text-sm text-blue-900">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="text-sm text-gray-900">
               <strong>Note:</strong> Cette demande est visible par tous les utilisateurs qui peuvent proposer leur aide.
             </div>
           </div>

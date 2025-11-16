@@ -5,12 +5,17 @@ import { mutation, query } from "./_generated/server";
 export const createOffre = mutation({
   args: {
     demandeId: v.id("demandes"),
-    userId: v.optional(v.id("users")),
+    userId: v.id("users"), // Rendre userId obligatoire
     proposedPrice: v.number(),
     message: v.string(),
     audioStorageId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Vérifier que l'utilisateur est authentifié
+    if (!args.userId) {
+      throw new Error("Vous devez être connecté pour proposer une offre");
+    }
+
     const offreId = await ctx.db.insert("offres", {
       demandeId: args.demandeId,
       userId: args.userId,
@@ -22,6 +27,16 @@ export const createOffre = mutation({
     });
 
     return offreId;
+  },
+});
+
+// Récupérer une offre par son ID
+export const getOffreById = query({
+  args: {
+    id: v.id("offres"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
 
@@ -142,6 +157,65 @@ export const getUserOffresWithDemandes = query({
   },
 });
 
+// Récupérer les offres proposées par un utilisateur (pour le prestataire)
+export const getOffresProposees = query({
+  args: {
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    if (!args.userId) {
+      return [];
+    }
+
+    const offres = await ctx.db
+      .query("offres")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .collect();
+
+    // Enrichir avec les détails de la demande et de la session
+    const offresEnrichies = await Promise.all(
+      offres.map(async (offre) => {
+        const demande = await ctx.db.get(offre.demandeId);
+        
+        let audioUrl = null;
+        if (offre.audioStorageId) {
+          audioUrl = await ctx.storage.getUrl(offre.audioStorageId);
+        }
+
+        // Si l'offre est acceptée, récupérer la session meet
+        let meetSessionId = null;
+        let paymentCompleted = false;
+        if (offre.status === "accepted" && offre.meetSessionId) {
+          meetSessionId = offre.meetSessionId;
+          // Vérifier le statut de paiement
+          const session = await ctx.db.get(offre.meetSessionId as any);
+          if (session && session.paymentStatus === "completed") {
+            paymentCompleted = true;
+          }
+        }
+
+        return {
+          ...offre,
+          demande: demande ? {
+            _id: demande._id,
+            title: demande.title,
+            category: demande.category,
+            description: demande.description,
+            price: demande.price,
+            status: demande.status,
+          } : null,
+          audioUrl,
+          meetSessionId,
+          paymentCompleted,
+        };
+      })
+    );
+
+    return offresEnrichies;
+  },
+});
+
 // Récupérer les offres reçues par un utilisateur (offres sur ses demandes)
 export const getOffresRecues = query({
   args: {
@@ -199,6 +273,14 @@ export const getOffresRecues = query({
 
     // Aplatir le tableau et trier par date
     return offresRecues.flat().sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+// Récupérer toutes les offres (simple)
+export const getAllOffres = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("offres").order("desc").collect();
   },
 });
 

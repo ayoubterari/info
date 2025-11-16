@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api.js'
 import Header from '../components/Header'
-import { useAuth } from '../hooks/useAuth'
+import AuthModal from '../components/AuthModal'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function HumanService() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, signIn, signUp } = useAuth()
   const createDemande = useMutation(api.demandes.createDemande)
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
   
@@ -19,6 +20,10 @@ export default function HumanService() {
     price: '',
     duration: ''
   })
+  
+  // Auth modal state
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('signin')
   
   // Audio recording state
   const [isRecording, setIsRecording] = useState(false)
@@ -33,6 +38,28 @@ export default function HumanService() {
   
   // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Handle auth submit
+  const handleAuthSubmit = async (formData) => {
+    try {
+      if (authMode === 'signup') {
+        await signUp(formData)
+      } else {
+        await signIn(formData)
+      }
+      // Fermer le modal après une connexion réussie
+      setAuthModalOpen(false)
+    } catch (error) {
+      // L'erreur sera gérée par le modal AuthModal
+      console.error('Erreur d\'authentification:', error)
+    }
+  }
+
+  // Handle login button click
+  const handleLoginClick = () => {
+    setAuthMode('signin')
+    setAuthModalOpen(true)
+  }
 
   // Start audio recording
   const startRecording = async () => {
@@ -94,6 +121,13 @@ export default function HumanService() {
 
   const handleNeedHelpSubmit = async (e) => {
     e.preventDefault()
+    
+    // Vérifier l'authentification
+    if (!user?.userId) {
+      alert('Vous devez être connecté pour soumettre une demande')
+      return
+    }
+    
     setIsSubmitting(true)
     
     try {
@@ -132,7 +166,7 @@ export default function HumanService() {
       }
       
       await createDemande({
-        userId: user?.userId,
+        userId: user.userId,
         title: needHelpForm.title,
         category: needHelpForm.category,
         description: needHelpForm.description,
@@ -142,12 +176,10 @@ export default function HumanService() {
         fileStorageIds,
       })
       
-      alert('Votre demande d\'aide a été enregistrée avec succès!')
+      alert('Votre demande d\'aide a été enregistrée avec succès! Vous allez être redirigé vers la page des offres.')
       
-      // Reset form
-      setNeedHelpForm({ title: '', description: '', category: 'general', price: '', duration: '' })
-      removeAudio()
-      setUploadedFiles([])
+      // Rediriger vers la page des offres
+      navigate('/offres')
     } catch (error) {
       console.error('Error submitting demande:', error)
       alert('Erreur lors de l\'enregistrement de la demande. Veuillez réessayer.')
@@ -219,8 +251,9 @@ export default function HumanService() {
                       value={needHelpForm.title}
                       onChange={(e) => setNeedHelpForm({ ...needHelpForm, title: e.target.value })}
                       placeholder="Ex: Aide pour déménagement"
-                      className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors"
+                      className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                       required
+                      disabled={!user}
                     />
                   </div>
 
@@ -231,7 +264,8 @@ export default function HumanService() {
                     <select
                       value={needHelpForm.category}
                       onChange={(e) => setNeedHelpForm({ ...needHelpForm, category: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors"
+                      className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
+                      disabled={!user}
                     >
                       <option value="general">Général</option>
                       <option value="moving">Déménagement</option>
@@ -255,8 +289,9 @@ export default function HumanService() {
                           value={needHelpForm.price}
                           onChange={(e) => setNeedHelpForm({ ...needHelpForm, price: e.target.value })}
                           placeholder="0.00"
-                          className="w-full pl-8 pr-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors"
+                          className="w-full pl-8 pr-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                           required
+                          disabled={!user}
                         />
                       </div>
                       <p className="text-xs text-gray-500 mt-1">Montant que vous êtes prêt à payer</p>
@@ -273,7 +308,8 @@ export default function HumanService() {
                         value={needHelpForm.duration}
                         onChange={(e) => setNeedHelpForm({ ...needHelpForm, duration: e.target.value })}
                         placeholder="30"
-                        className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors"
+                        className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
+                        disabled={!user}
                       />
                       <p className="text-xs text-gray-500 mt-1">Temps estimé pour l'aide</p>
                     </div>
@@ -287,9 +323,10 @@ export default function HumanService() {
                       value={needHelpForm.description}
                       onChange={(e) => setNeedHelpForm({ ...needHelpForm, description: e.target.value })}
                       placeholder="Décrivez en détail ce dont vous avez besoin..."
-                      className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors resize-none"
+                      className="w-full px-4 py-2 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors resize-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                       rows="4"
                       required
+                      disabled={!user}
                     />
                   </div>
 
@@ -303,11 +340,12 @@ export default function HumanService() {
                         <button
                           type="button"
                           onClick={isRecording ? stopRecording : startRecording}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 ${
                             isRecording
                               ? 'bg-red-500 text-white hover:bg-red-600'
                               : 'bg-black/10 text-black hover:bg-black/20'
                           }`}
+                          disabled={!user}
                         >
                           {isRecording ? (
                             <>
@@ -356,7 +394,8 @@ export default function HumanService() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2 px-4 py-2 bg-black/10 text-black rounded-lg hover:bg-black/20 transition-colors font-semibold text-sm"
+                      className="flex items-center gap-2 px-4 py-2 bg-black/10 text-black rounded-lg hover:bg-black/20 transition-colors font-semibold text-sm disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400"
+                      disabled={!user}
                     >
                       <Upload className="w-4 h-4" />
                       <span>Ajouter des fichiers</span>
@@ -390,17 +429,27 @@ export default function HumanService() {
                     )}
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
-                      isSubmitting
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/30'
-                    }`}
-                  >
-                    {isSubmitting ? 'Enregistrement...' : 'Publier ma demande'}
-                  </button>
+                  {user ? (
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
+                        isSubmitting
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/30'
+                      }`}
+                    >
+                      {isSubmitting ? 'Enregistrement...' : 'Publier ma demande'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleLoginClick}
+                      className="w-full py-3 rounded-lg font-semibold transition-all duration-300 bg-gray-600 text-white hover:bg-gray-700 hover:shadow-lg hover:shadow-gray-600/30"
+                    >
+                      Connectez-vous pour publier
+                    </button>
+                  )}
                 </form>
               </div>
             </div>
@@ -450,6 +499,14 @@ export default function HumanService() {
           <p>© 2025 FreeL AI. Powered by multiple AI agents. Always learning, always improving.</p>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        mode={authMode}
+        onSubmit={handleAuthSubmit}
+      />
     </div>
   )
 }

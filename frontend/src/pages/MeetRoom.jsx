@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../convex/_generated/api'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 import {
   StreamVideo,
   StreamVideoClient,
@@ -190,16 +190,19 @@ function MeetingUI({ onEndCall, duration }) {
   // Compte à rebours
   const [timeRemaining, setTimeRemaining] = useState(duration ? duration * 60 : null) // Convertir minutes en secondes
   const [isTimerWarning, setIsTimerWarning] = useState(false)
+  const [timerStarted, setTimerStarted] = useState(false)
 
-  // Debug: Log de la durée
+  // Démarrer le timer uniquement quand les 2 participants sont présents
   useEffect(() => {
-    console.log('Duration reçue:', duration)
-    console.log('Time remaining initialisé:', timeRemaining)
-  }, [duration, timeRemaining])
+    if (participantCount >= 2 && !timerStarted && timeRemaining) {
+      console.log('🎬 Les 2 participants sont présents, démarrage du timer!')
+      setTimerStarted(true)
+    }
+  }, [participantCount, timerStarted, timeRemaining])
 
-  // Gérer le compte à rebours
+  // Gérer le compte à rebours (ne démarre que si timerStarted est true)
   useEffect(() => {
-    if (!timeRemaining) return
+    if (!timeRemaining || !timerStarted) return
 
     const interval = setInterval(() => {
       setTimeRemaining(prev => {
@@ -227,7 +230,7 @@ function MeetingUI({ onEndCall, duration }) {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [timeRemaining, onEndCall])
+  }, [timeRemaining, timerStarted, onEndCall])
 
   // Formater le temps restant
   const formatTime = (seconds) => {
@@ -289,7 +292,9 @@ function MeetingUI({ onEndCall, duration }) {
           {/* Compte à rebours */}
           {timeRemaining && (
             <div className={`backdrop-blur-sm px-4 py-2 rounded-lg text-white text-sm font-mono flex items-center gap-2 transition-all ${
-              timeRemaining <= 300 
+              !timerStarted
+                ? 'bg-yellow-500/80 animate-pulse'
+                : timeRemaining <= 300 
                 ? 'bg-red-500/80 animate-pulse' 
                 : timeRemaining <= 600
                 ? 'bg-orange-500/80'
@@ -297,14 +302,26 @@ function MeetingUI({ onEndCall, duration }) {
             }`}>
               <Clock className="h-4 w-4" />
               <span className="font-bold">{formatTime(timeRemaining)}</span>
+              {!timerStarted && (
+                <span className="text-xs ml-2">(En attente)</span>
+              )}
             </div>
           )}
           
           {/* Participant Count */}
-          <div className="bg-black/50 backdrop-blur-sm px-3 py-2 rounded-lg text-white text-sm flex items-center gap-2">
+          <div className={`backdrop-blur-sm px-3 py-2 rounded-lg text-white text-sm flex items-center gap-2 ${
+            participantCount >= 2 ? 'bg-green-500/80' : 'bg-black/50'
+          }`}>
             <Video className="h-4 w-4" />
             {participantCount} participant{participantCount > 1 ? 's' : ''}
           </div>
+          
+          {/* Message d'attente si un seul participant */}
+          {participantCount < 2 && (
+            <div className="bg-yellow-500/80 backdrop-blur-sm px-3 py-2 rounded-lg text-white text-xs max-w-[200px]">
+              ⏳ En attente du 2ème participant...
+            </div>
+          )}
         </div>
       </div>
 
@@ -357,7 +374,7 @@ function MeetingUI({ onEndCall, duration }) {
               onClick={toggleScreenShare}
               className={`group relative h-14 w-14 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 ${
                 isScreenSharing 
-                  ? 'bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-500/50' 
+                  ? 'bg-gray-500 hover:bg-gray-600 shadow-lg shadow-gray-500/50' 
                   : 'bg-gray-700 hover:bg-gray-600 shadow-lg shadow-gray-700/50'
               }`}
               title={isScreenSharing ? 'Arrêter le partage' : 'Partager l\'écran'}

@@ -8,6 +8,13 @@ export const getUsers = query({
   },
 });
 
+// Alias pour getAllUsers (utilisé dans le dashboard admin)
+export const getAllUsers = query({
+  handler: async (ctx) => {
+    return await ctx.db.query("users").collect();
+  },
+});
+
 // Query: Récupérer un utilisateur par ID
 export const getUserById = query({
   args: { id: v.id("users") },

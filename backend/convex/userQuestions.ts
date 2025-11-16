@@ -12,7 +12,7 @@ export const canAskQuestion = query({
     }
 
     const questionsAsked = user.questionsAsked || 0;
-    const questionsLimit = user.questionsLimit || 2;
+    const questionsLimit = user.questionsLimit || 3;
 
     if (questionsAsked >= questionsLimit) {
       return {

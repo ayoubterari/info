@@ -34,7 +34,9 @@ export default function AuthModal({ isOpen, onClose, mode, onSubmit }) {
       }
 
       await onSubmit(formData);
-      onClose();
+      // Ne pas fermer ici - le parent gère la fermeture après succès
+      // Réinitialiser le formulaire
+      setFormData({ name: '', email: '', password: '' });
     } catch (err) {
       setError(err.message || 'Une erreur est survenue');
     } finally {
@@ -122,7 +124,7 @@ export default function AuthModal({ isOpen, onClose, mode, onSubmit }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Chargement...' : isSignUp ? 'Créer mon compte' : 'Se connecter'}
           </button>

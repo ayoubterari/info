@@ -4,11 +4,16 @@ import { api } from "../../convex/_generated/api.js";
 export function useOpenAI() {
   const chatAction = useAction(api.openai.chat);
 
-  const generateResponse = async (prompt, agentName) => {
+  const generateResponse = async (prompt, agentName, userId) => {
+    if (!userId) {
+      throw new Error("Vous devez être connecté pour poser une question à l'IA");
+    }
+    
     try {
       const result = await chatAction({
         prompt,
         agentName,
+        userId,
       });
       return result;
     } catch (error) {

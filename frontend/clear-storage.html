@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Storage - Debug</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .warning {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #ff9800;
+        }
+        button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #d32f2f;
+        }
+        button.secondary {
+            background: #2196f3;
+        }
+        button.secondary:hover {
+            background: #1976d2;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Debug & Clear Storage</h1>
+        
+        <div class="info">
+            <h3>Informations du localStorage</h3>
+            <pre id="userInfo">Chargement...</pre>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ Actions</h3>
+            <p>Si vous avez modifié le rôle d'un utilisateur dans Convex mais que la redirection ne fonctionne pas, c'est probablement parce que l'ancien rôle est stocké dans le localStorage.</p>
+        </div>
+
+        <button onclick="clearStorage()">🗑️ Effacer le localStorage</button>
+        <button class="secondary" onclick="refreshInfo()">🔄 Rafraîchir les infos</button>
+        <button class="secondary" onclick="window.location.href='http://localhost:5173'">🏠 Retour à l'app</button>
+    </div>
+
+    <script>
+        function displayUserInfo() {
+            const user = localStorage.getItem('user');
+            const infoElement = document.getElementById('userInfo');
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    infoElement.textContent = JSON.stringify(userData, null, 2);
+                } catch (e) {
+                    infoElement.textContent = 'Erreur de parsing: ' + user;
+                }
+            } else {
+                infoElement.textContent = 'Aucun utilisateur dans le localStorage';
+            }
+        }
+
+        function clearStorage() {
+            if (confirm('Êtes-vous sûr de vouloir effacer le localStorage ?')) {
+                localStorage.clear();
+                alert('✅ localStorage effacé ! Reconnectez-vous pour tester.');
+                displayUserInfo();
+            }
+        }
+
+        function refreshInfo() {
+            displayUserInfo();
+        }
+
+        // Afficher les infos au chargement
+        displayUserInfo();
+    </script>
+</body>
+</html>

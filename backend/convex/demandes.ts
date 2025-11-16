@@ -4,7 +4,7 @@ import { mutation, query } from "./_generated/server";
 // Créer une nouvelle demande d'aide
 export const createDemande = mutation({
   args: {
-    userId: v.optional(v.id("users")),
+    userId: v.id("users"), // Rendre userId obligatoire
     title: v.string(),
     category: v.string(),
     description: v.string(),
@@ -18,6 +18,11 @@ export const createDemande = mutation({
     }))),
   },
   handler: async (ctx, args) => {
+    // Vérifier que l'utilisateur est authentifié
+    if (!args.userId) {
+      throw new Error("Vous devez être connecté pour soumettre une demande");
+    }
+
     const now = Date.now();
     
     const demandeId = await ctx.db.insert("demandes", {

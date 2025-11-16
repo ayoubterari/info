@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Send, Sparkles, Code, Zap, Brain, Lightbulb, Clock, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api.js'
 import ResponseModal from '../components/ResponseModal'
 import HistoryModal from '../components/HistoryModal'
+import AuthModal from '../components/AuthModal'
 import Header from '../components/Header'
 import { useOpenAI } from '../hooks/useOpenAI'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 
 const agents = [
   { id: 1, name: 'GPT-4', icon: Brain, color: 'from-purple-600 to-purple-400' },
@@ -29,8 +30,49 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   
   const { generateResponse } = useOpenAI()
-  const { user } = useAuth()
+  const { user, signIn, signUp } = useAuth()
   const saveConversation = useMutation(api.conversations.saveConversation)
+  const incrementQuestionCount = useMutation(api.userQuestions.incrementQuestionCount)
+  
+  // Vérifier la limite de questions
+  const userStats = useQuery(
+    api.userQuestions.getUserStats,
+    user?.userId ? { userId: user.userId } : "skip"
+  )
+  
+  // Auth modal state
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('signin')
+
+  // Réinitialiser les messages quand l'utilisateur change
+  useEffect(() => {
+    setMessages([])
+    setPrompt('')
+    setModalResponse('')
+    setIsModalOpen(false)
+  }, [user?.userId])
+
+  // Handle auth submit
+  const handleAuthSubmit = async (formData) => {
+    try {
+      if (authMode === 'signup') {
+        await signUp(formData)
+      } else {
+        await signIn(formData)
+      }
+      // Fermer le modal après une connexion réussie
+      setAuthModalOpen(false)
+    } catch (error) {
+      // L'erreur sera gérée par le modal AuthModal
+      console.error('Erreur d\'authentification:', error)
+    }
+  }
+
+  // Handle login button click
+  const handleLoginClick = () => {
+    setAuthMode('signin')
+    setAuthModalOpen(true)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -48,8 +90,25 @@ export default function Home() {
       setIsModalOpen(true)
       
       try {
+        // Vérifier l'authentification
+        if (!user?.userId) {
+          throw new Error("Vous devez être connecté pour poser une question à l'IA")
+        }
+
+        // Vérifier la limite de questions
+        if (userStats && userStats.remaining <= 0) {
+          setIsLoading(false)
+          setIsModalOpen(false)
+          alert(`Vous avez atteint votre limite de ${userStats.questionsLimit} questions. Vous allez être redirigé vers la section "J'ai besoin d'aide" pour obtenir de l'assistance humaine.`)
+          navigate('/human-service')
+          return
+        }
+
         // Call OpenAI API through Convex
-        const result = await generateResponse(userPrompt, selectedAgent.name)
+        const result = await generateResponse(userPrompt, selectedAgent.name, user.userId)
+        
+        // Incrémenter le compteur de questions
+        await incrementQuestionCount({ userId: user.userId })
         
         // Update modal with response
         setModalResponse(result.response)
@@ -65,7 +124,7 @@ export default function Home() {
         // Sauvegarder la conversation dans l'historique
         try {
           await saveConversation({
-            userId: user?.userId,
+            userId: user.userId,
             userMessage: userPrompt,
             aiResponse: result.response,
             agentName: selectedAgent.name,
@@ -212,10 +271,18 @@ export default function Home() {
               const Icon = selectedAgent.icon
               return <Icon className="w-4 h-4 text-black" />
             })()}
-            <div>
+            <div className="flex-1">
               <p className="text-xs text-gray-600">Current Agent</p>
               <p className="text-xs font-semibold text-black">{selectedAgent.name}</p>
             </div>
+            {user && userStats && (
+              <div className="text-right">
+                <p className="text-xs text-gray-600">Questions restantes</p>
+                <p className={`text-xs font-semibold ${userStats.remaining <= 1 ? 'text-red-600' : 'text-green-600'}`}>
+                  {userStats.remaining}/{userStats.questionsLimit}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -230,11 +297,22 @@ export default function Home() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ask anything... Describe your idea, ask a question, or request code..."
-                className="w-full bg-transparent text-black placeholder-gray-500 outline-none resize-none text-sm md:text-base leading-relaxed"
+                placeholder={user ? "Ask anything... Describe your idea, ask a question, or request code..." : "Connectez-vous pour poser une question..."}
+                className="w-full bg-transparent text-black placeholder-gray-500 outline-none resize-none text-sm md:text-base leading-relaxed disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                 rows="3"
                 maxLength="2000"
+                disabled={!user}
               />
+
+              {/* Avertissement limite de questions */}
+              {user && userStats && userStats.remaining <= 1 && userStats.remaining > 0 && (
+                <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-xs text-yellow-800">
+                    ⚠️ Attention : Il vous reste seulement {userStats.remaining} question{userStats.remaining > 1 ? 's' : ''}. 
+                    Après cela, vous serez redirigé vers "J'ai besoin d'aide" pour une assistance humaine.
+                  </p>
+                </div>
+              )}
 
               {/* Footer with character count and submit */}
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-black/10">
@@ -265,19 +343,30 @@ export default function Home() {
                     <span className="hidden sm:inline">Historique</span>
                   </button>
 
-                  {/* Bouton Send */}
-                  <button
-                    type="submit"
-                    disabled={!prompt.trim()}
-                    className={`flex items-center gap-2 px-5 py-1.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
-                      prompt.trim()
-                        ? 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/30 cursor-pointer'
-                        : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
-                    }`}
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Send</span>
-                  </button>
+                  {/* Bouton Send ou Login */}
+                  {user ? (
+                    <button
+                      type="submit"
+                      disabled={!prompt.trim()}
+                      className={`flex items-center gap-2 px-5 py-1.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                        prompt.trim()
+                          ? 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/30 cursor-pointer'
+                          : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Send</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleLoginClick}
+                      className="flex items-center gap-2 px-5 py-1.5 rounded-lg font-semibold text-sm transition-all duration-300 bg-gray-600 text-white hover:bg-gray-700 hover:shadow-lg hover:shadow-gray-600/30"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Connectez-vous</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -286,7 +375,7 @@ export default function Home() {
           {/* Suggestions */}
           {messages.length === 0 && (
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {[
+              {user && [
                 'Explain quantum computing',
                 'Write a React component',
                 'Design a landing page',
@@ -326,6 +415,14 @@ export default function Home() {
       <HistoryModal
         isOpen={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        mode={authMode}
+        onSubmit={handleAuthSubmit}
       />
 
       {/* Custom scrollbar styles */}

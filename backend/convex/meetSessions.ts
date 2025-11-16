@@ -99,6 +99,49 @@ export const getMeetSession = query({
   },
 });
 
+// Récupérer une session par ID (pour la page de paiement)
+export const getSessionById = query({
+  args: {
+    sessionId: v.id("meetSessions"),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) {
+      return null;
+    }
+
+    const demande = await ctx.db.get(session.demandeId);
+    const demandeur = await ctx.db.get(session.demandeurId);
+    const offreur = await ctx.db.get(session.offreurId);
+
+    return {
+      ...session,
+      demandeTitle: demande?.title || "Service",
+      duration: demande?.duration || 30,
+      demandeurName: demandeur?.name || "Demandeur",
+      helperName: offreur?.name || "Prestataire",
+    };
+  },
+});
+
+// Mettre à jour le statut de paiement
+export const updatePaymentStatus = mutation({
+  args: {
+    sessionId: v.id("meetSessions"),
+    paymentStatus: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed")),
+    paymentMethod: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.sessionId, {
+      paymentStatus: args.paymentStatus,
+      paymentMethod: args.paymentMethod,
+      paidAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
 // Terminer une session meet
 export const endMeetSession = mutation({
   args: {

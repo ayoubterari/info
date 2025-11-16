@@ -13,7 +13,7 @@ import { ProfileTab } from '../components/dashboard/ProfileTab'
 import { DemandesTab } from '../components/dashboard/DemandesTab'
 import { OffresTab } from '../components/dashboard/OffresTab'
 import Header from '../components/Header'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { User, Settings, BarChart3, MessageSquare, HelpCircle, Send, DollarSign, TrendingUp, CheckCircle, Clock, Home } from 'lucide-react'
@@ -173,10 +173,10 @@ export default function Dashboard() {
                       recentActivity.map((activity) => (
                         <div key={activity.id} className="flex items-center gap-4">
                           <div className={`h-9 w-9 rounded-full flex items-center justify-center ${
-                            activity.type === 'demande' ? 'bg-blue-100' : 'bg-green-100'
+                            activity.type === 'demande' ? 'bg-gray-100' : 'bg-green-100'
                           }`}>
                             {activity.type === 'demande' ? (
-                              <MessageSquare className="h-4 w-4 text-blue-600" />
+                              <MessageSquare className="h-4 w-4 text-gray-600" />
                             ) : (
                               <Send className="h-4 w-4 text-green-600" />
                             )}

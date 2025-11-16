@@ -2,16 +2,21 @@ import { useState, useRef } from 'react'
 import { X, Mic, MicOff, DollarSign } from 'lucide-react'
 import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api.js'
-import { useAuth } from '../hooks/useAuth'
+import AuthModal from './AuthModal'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function OfferModal({ isOpen, onClose, demande }) {
-  const { user } = useAuth()
+  const { user, signIn, signUp } = useAuth()
   const createOffre = useMutation(api.offres.createOffre)
   const generateUploadUrl = useMutation(api.files.generateUploadUrl)
   
   const [proposedPrice, setProposedPrice] = useState(demande?.price || 0)
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Auth modal state
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('signin')
   
   // Audio recording state
   const [isRecording, setIsRecording] = useState(false)
@@ -67,8 +72,37 @@ export default function OfferModal({ isOpen, onClose, demande }) {
     setAudioUrl(null)
   }
 
+  // Handle auth submit
+  const handleAuthSubmit = async (formData) => {
+    try {
+      if (authMode === 'signup') {
+        await signUp(formData)
+      } else {
+        await signIn(formData)
+      }
+      // Fermer le modal après une connexion réussie
+      setAuthModalOpen(false)
+    } catch (error) {
+      // L'erreur sera gérée par le modal AuthModal
+      console.error('Erreur d\'authentification:', error)
+    }
+  }
+
+  // Handle login button click
+  const handleLoginClick = () => {
+    setAuthMode('signin')
+    setAuthModalOpen(true)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Vérifier l'authentification
+    if (!user?.userId) {
+      alert('Vous devez être connecté pour proposer une offre')
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
@@ -87,7 +121,7 @@ export default function OfferModal({ isOpen, onClose, demande }) {
 
       await createOffre({
         demandeId: demande._id,
-        userId: user?.userId,
+        userId: user.userId,
         proposedPrice: parseFloat(proposedPrice),
         message: message,
         audioStorageId,
@@ -152,8 +186,9 @@ export default function OfferModal({ isOpen, onClose, demande }) {
                 value={proposedPrice}
                 onChange={(e) => setProposedPrice(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-8 pr-4 py-3 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors text-lg font-semibold"
+                className="w-full pl-8 pr-4 py-3 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors text-lg font-semibold disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                 required
+                disabled={!user}
               />
             </div>
             <p className="text-xs text-gray-500 mt-1">
@@ -170,9 +205,10 @@ export default function OfferModal({ isOpen, onClose, demande }) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Expliquez pourquoi vous êtes la personne idéale pour cette tâche..."
-              className="w-full px-4 py-3 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors resize-none"
+              className="w-full px-4 py-3 border-2 border-black/20 rounded-lg focus:border-black focus:outline-none transition-colors resize-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
               rows="4"
               required
+              disabled={!user}
             />
           </div>
 
@@ -186,11 +222,12 @@ export default function OfferModal({ isOpen, onClose, demande }) {
                 <button
                   type="button"
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 ${
                     isRecording
                       ? 'bg-red-500 text-white hover:bg-red-600'
                       : 'bg-black/10 text-black hover:bg-black/20'
                   }`}
+                  disabled={!user}
                 >
                   {isRecording ? (
                     <>
@@ -233,20 +270,38 @@ export default function OfferModal({ isOpen, onClose, demande }) {
             >
               Annuler
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
-                isSubmitting
-                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg'
-              }`}
-            >
-              {isSubmitting ? 'Envoi en cours...' : 'Soumettre mon offre'}
-            </button>
+            {user ? (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all ${
+                  isSubmitting
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-black text-white hover:bg-gray-800 hover:shadow-lg'
+                }`}
+              >
+                {isSubmitting ? 'Envoi en cours...' : 'Soumettre mon offre'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLoginClick}
+                className="flex-1 px-6 py-3 rounded-lg font-semibold transition-all bg-gray-600 text-white hover:bg-gray-700 hover:shadow-lg"
+              >
+                Connectez-vous pour proposer
+              </button>
+            )}
           </div>
         </form>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        mode={authMode}
+        onSubmit={handleAuthSubmit}
+      />
     </div>
   )
 }

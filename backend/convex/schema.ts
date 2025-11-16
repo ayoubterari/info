@@ -93,6 +93,9 @@ export default defineSchema({
     offreurId: v.id("users"), // Utilisateur qui a fait l'offre
     callId: v.string(), // ID unique de l'appel Stream.io
     status: v.union(v.literal("active"), v.literal("completed"), v.literal("cancelled")),
+    paymentStatus: v.optional(v.union(v.literal("pending"), v.literal("completed"), v.literal("failed"))),
+    paymentMethod: v.optional(v.string()),
+    paidAt: v.optional(v.number()),
     createdAt: v.number(),
     endedAt: v.optional(v.number()),
   })
