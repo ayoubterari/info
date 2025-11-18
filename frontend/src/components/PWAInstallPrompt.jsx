@@ -1,24 +1,39 @@
 import { useState, useEffect } from 'react'
-import { Download, X } from 'lucide-react'
+import { Download, X, Share } from 'lucide-react'
 
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showPrompt, setShowPrompt] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+  const [isAndroid, setIsAndroid] = useState(false)
 
   useEffect(() => {
     // Vérifier si l'app est déjà installée
     if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('App already installed')
       return
     }
 
     // Vérifier si l'utilisateur a déjà refusé l'installation
     const hasDeclined = localStorage.getItem('pwa-install-declined')
     if (hasDeclined) {
+      console.log('User has declined installation')
       return
     }
 
-    // Écouter l'événement beforeinstallprompt
+    // Détecter le système d'exploitation
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    const ios = /iphone|ipad|ipod/.test(userAgent)
+    const android = /android/.test(userAgent)
+    
+    setIsIOS(ios)
+    setIsAndroid(android)
+
+    console.log('Device detected:', { ios, android })
+
+    // Écouter l'événement beforeinstallprompt (Android Chrome)
     const handler = (e) => {
+      console.log('beforeinstallprompt event fired')
       e.preventDefault()
       setDeferredPrompt(e)
       
@@ -29,6 +44,14 @@ export default function PWAInstallPrompt() {
     }
 
     window.addEventListener('beforeinstallprompt', handler)
+
+    // Pour iOS ou si beforeinstallprompt ne se déclenche pas, afficher quand même
+    if (ios || android) {
+      setTimeout(() => {
+        console.log('Showing prompt for mobile device')
+        setShowPrompt(true)
+      }, 3000)
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
@@ -58,17 +81,17 @@ export default function PWAInstallPrompt() {
     localStorage.setItem('pwa-install-declined', 'true')
   }
 
-  if (!showPrompt || !deferredPrompt) {
+  if (!showPrompt) {
     return null
   }
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up md:left-auto md:right-4 md:max-w-sm">
-      <div className="bg-gradient-to-br from-black via-gray-800 to-gray-700 text-white rounded-2xl shadow-2xl border border-gray-600 overflow-hidden">
+      <div className="bg-gradient-to-br from-black via-gray-800 to-gray-700 text-white rounded-2xl shadow-2xl border border-gray-600 overflow-hidden relative">
         {/* Close button */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 p-1 hover:bg-white/10 rounded-full transition-colors"
+          className="absolute top-3 right-3 p-1 hover:bg-white/10 rounded-full transition-colors z-10"
           aria-label="Fermer"
         >
           <X className="w-4 h-4" />
@@ -78,25 +101,49 @@ export default function PWAInstallPrompt() {
           {/* Icon */}
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-white/10 rounded-lg">
-              <Download className="w-6 h-6" />
+              {isIOS ? <Share className="w-6 h-6" /> : <Download className="w-6 h-6" />}
             </div>
             <h3 className="text-lg font-bold">Installer FreeL AI</h3>
           </div>
 
           {/* Description */}
           <p className="text-gray-200 text-sm mb-4 leading-relaxed">
-            Installez l'application pour un accès rapide et une meilleure expérience, même hors ligne !
+            {isIOS 
+              ? "Installez l'application sur votre écran d'accueil pour un accès rapide !"
+              : "Installez l'application pour un accès rapide et une meilleure expérience, même hors ligne !"
+            }
           </p>
+
+          {/* Instructions pour iOS */}
+          {isIOS && (
+            <div className="bg-white/10 rounded-lg p-3 mb-4 text-xs text-gray-200">
+              <p className="font-semibold mb-2">Comment installer :</p>
+              <ol className="space-y-1 list-decimal list-inside">
+                <li>Appuyez sur <Share className="w-3 h-3 inline" /> (Partager)</li>
+                <li>Sélectionnez "Sur l'écran d'accueil"</li>
+                <li>Appuyez sur "Ajouter"</li>
+              </ol>
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-2">
-            <button
-              onClick={handleInstall}
-              className="flex-1 bg-white text-black px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Installer
-            </button>
+            {deferredPrompt ? (
+              <button
+                onClick={handleInstall}
+                className="flex-1 bg-white text-black px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Installer
+              </button>
+            ) : (
+              <button
+                onClick={handleDismiss}
+                className="flex-1 bg-white text-black px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-all duration-300"
+              >
+                Compris !
+              </button>
+            )}
             <button
               onClick={handleDismiss}
               className="px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-white/10 transition-all duration-300"

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { User, LogOut, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
+import InstallButton from './InstallButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -106,6 +107,7 @@ export default function Header() {
 
             {/* Auth Buttons */}
             <div className="flex items-center space-x-3">
+              <InstallButton />
               {loading ? (
                 <div className="px-4 py-2 text-gray-500">Chargement...</div>
               ) : user ? (
