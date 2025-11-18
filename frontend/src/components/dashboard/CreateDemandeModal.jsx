@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
@@ -15,7 +15,7 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Textarea } from '../ui/textarea'
-import { Mic, MicOff, Upload, X, FileText } from 'lucide-react'
+import { Mic, MicOff, Upload, X, FileText, ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react'
 
 export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
   const { user } = useAuth()
@@ -40,6 +40,23 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
   const [uploadedFiles, setUploadedFiles] = useState([])
   const fileInputRef = useRef(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const steps = [
+    { number: 1, title: 'Informations', icon: Sparkles },
+    { number: 2, title: 'Détails', icon: FileText },
+    { number: 3, title: 'Médias', icon: Upload },
+  ]
 
   const categories = [
     { value: 'general', label: 'Général' },
@@ -175,172 +192,323 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
     }
   }
 
+  const nextStep = () => {
+    if (currentStep < 3) setCurrentStep(currentStep + 1)
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1)
+  }
+
+  const canProceed = () => {
+    if (currentStep === 1) return formData.title && formData.category
+    if (currentStep === 2) return formData.description && formData.price
+    return true
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Nouvelle Demande d'Aide</DialogTitle>
-          <DialogDescription>
-            Remplissez le formulaire pour créer une nouvelle demande
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className={`${isMobile ? 'max-w-full h-full m-0 rounded-none' : 'max-w-2xl'} max-h-[100vh] overflow-hidden p-0`}>
+        {/* Header créatif avec gradient */}
+        <div className="relative bg-gradient-to-br from-black via-gray-800 to-gray-700 text-white p-6 pb-8">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full blur-2xl"></div>
+          
+          <div className="relative z-10">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-6 h-6" />
+                Nouvelle Demande
+              </DialogTitle>
+              <DialogDescription className="text-gray-200 text-sm mt-2">
+                Créez votre demande en {steps.length} étapes simples
+              </DialogDescription>
+            </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Titre *</Label>
-            <Input
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Ex: Besoin d'aide pour..."
-              required
-              disabled={!user}
-            />
+            {/* Progress Steps - Mobile Optimized */}
+            {isMobile && (
+              <div className="mt-6 flex justify-between items-center">
+                {steps.map((step, index) => {
+                  const StepIcon = step.icon
+                  const isActive = currentStep === step.number
+                  const isCompleted = currentStep > step.number
+                  
+                  return (
+                    <div key={step.number} className="flex flex-col items-center flex-1">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        isCompleted ? 'bg-green-500' : isActive ? 'bg-white text-black' : 'bg-white/20'
+                      }`}>
+                        {isCompleted ? (
+                          <Check className="w-5 h-5 text-white" />
+                        ) : (
+                          <StepIcon className={`w-5 h-5 ${isActive ? 'text-black' : 'text-white'}`} />
+                        )}
+                      </div>
+                      <span className={`text-xs mt-2 ${isActive ? 'text-white font-semibold' : 'text-gray-300'}`}>
+                        {step.title}
+                      </span>
+                      {index < steps.length - 1 && (
+                        <div className={`absolute h-0.5 w-16 top-5 transition-all duration-300 ${
+                          isCompleted ? 'bg-green-500' : 'bg-white/20'
+                        }`} style={{ left: `calc(${(index + 1) * 33.33}% - 2rem)` }} />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category">Catégorie *</Label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleInputChange}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
-              required
-              disabled={!user}
-            >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
-            <Textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Décrivez votre besoin en détail..."
-              rows={4}
-              required
-              disabled={!user}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Prix proposé (USD) *</Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={handleInputChange}
-                placeholder="Ex: 50.00"
-                required
-                disabled={!user}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="duration">Durée estimée (minutes)</Label>
-              <Input
-                id="duration"
-                name="duration"
-                type="number"
-                min="1"
-                step="1"
-                value={formData.duration}
-                onChange={handleInputChange}
-                placeholder="Ex: 30"
-                disabled={!user}
-              />
-            </div>
-          </div>
-
-          {/* Audio Recording */}
-          <div className="space-y-2">
-            <Label>Message vocal (optionnel)</Label>
-            <div className="flex items-center gap-2">
-              {!audioUrl ? (
-                <Button
-                  type="button"
-                  variant={isRecording ? "destructive" : "outline"}
-                  onClick={isRecording ? stopRecording : startRecording}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+          {/* Step 1: Informations */}
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="space-y-3">
+                <Label htmlFor="title" className="text-base font-semibold">Quel est votre besoin ? *</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Besoin d'aide pour créer un site web..."
+                  required
                   disabled={!user}
-                >
-                  {isRecording ? (
-                    <><MicOff className="mr-2 h-4 w-4" /> Arrêter</>
-                  ) : (
-                    <><Mic className="mr-2 h-4 w-4" /> Enregistrer</>
-                  )}
-                </Button>
-              ) : (
-                <div className="flex items-center gap-2 flex-1">
-                  <audio src={audioUrl} controls className="flex-1" />
-                  <Button type="button" variant="ghost" size="sm" onClick={removeAudio}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
+                  className="h-12 text-base"
+                />
+              </div>
 
-          {/* File Upload */}
-          <div className="space-y-2">
-            <Label>Fichiers joints (optionnel)</Label>
-            <div className="space-y-2">
+              <div className="space-y-3">
+                <Label htmlFor="category" className="text-base font-semibold">Catégorie *</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {categories.map(cat => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        formData.category === cat.value
+                          ? 'border-black bg-black text-white shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-gray-400'
+                      }`}
+                    >
+                      <span className="font-semibold">{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Détails */}
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="space-y-3">
+                <Label htmlFor="description" className="text-base font-semibold">Décrivez votre besoin *</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Expliquez en détail ce dont vous avez besoin..."
+                  rows={6}
+                  required
+                  disabled={!user}
+                  className="text-base resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <Label htmlFor="price" className="text-base font-semibold">Prix (USD) *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      placeholder="50.00"
+                      required
+                      disabled={!user}
+                      className="h-12 pl-8 text-base"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="duration" className="text-base font-semibold">Durée (min)</Label>
+                  <Input
+                    id="duration"
+                    name="duration"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={formData.duration}
+                    onChange={handleInputChange}
+                    placeholder="30"
+                    disabled={!user}
+                    className="h-12 text-base"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Médias */}
+          {currentStep === 3 && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* Audio Recording */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Message vocal (optionnel)</Label>
+                <div className="p-4 border-2 border-dashed border-gray-300 rounded-xl">
+                  {!audioUrl ? (
+                    <Button
+                      type="button"
+                      variant={isRecording ? "destructive" : "outline"}
+                      onClick={isRecording ? stopRecording : startRecording}
+                      disabled={!user}
+                      className="w-full h-12"
+                    >
+                      {isRecording ? (
+                        <><MicOff className="mr-2 h-5 w-5" /> Arrêter l'enregistrement</>
+                      ) : (
+                        <><Mic className="mr-2 h-5 w-5" /> Enregistrer un message</>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <audio src={audioUrl} controls className="flex-1" />
+                      <Button type="button" variant="ghost" size="sm" onClick={removeAudio}>
+                        <X className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* File Upload */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Fichiers joints (optionnel)</Label>
+                <div className="p-4 border-2 border-dashed border-gray-300 rounded-xl space-y-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!user}
+                    className="w-full h-12"
+                  >
+                    <Upload className="mr-2 h-5 w-5" />
+                    Ajouter des fichiers
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  {uploadedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                          <FileText className="h-5 w-5 text-gray-500" />
+                          <span className="text-sm flex-1 truncate">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                          >
+                            <X className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </form>
+
+        {/* Footer avec boutons de navigation */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4">
+          <div className="flex items-center justify-between gap-3">
+            {currentStep > 1 ? (
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!user}
+                onClick={prevStep}
+                className="flex-1 h-12"
               >
-                <Upload className="mr-2 h-4 w-4" />
-                Ajouter des fichiers
+                <ChevronLeft className="mr-2 h-5 w-5" />
+                Précédent
               </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              {uploadedFiles.length > 0 && (
-                <div className="space-y-1">
-                  {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                      <FileText className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm flex-1">{file.name}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="flex-1 h-12"
+              >
+                Annuler
+              </Button>
+            )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting || !user}>
-              {isSubmitting ? 'Création...' : !user ? 'Connectez-vous d\'abord' : 'Créer la demande'}
-            </Button>
-          </DialogFooter>
-        </form>
+            {currentStep < 3 ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                disabled={!canProceed()}
+                className="flex-1 h-12 bg-black text-white hover:bg-gray-800"
+              >
+                Suivant
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !user}
+                className="flex-1 h-12 bg-green-600 text-white hover:bg-green-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5 animate-spin" />
+                    Création...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-5 w-5" />
+                    Créer la demande
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
       </DialogContent>
+      
+      {/* Styles pour les animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </Dialog>
   )
 }
