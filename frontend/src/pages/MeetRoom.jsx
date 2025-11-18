@@ -9,6 +9,8 @@ import {
   StreamCall,
   SpeakerLayout,
   useCallStateHooks,
+  ParticipantView as StreamParticipantView,
+  useCall,
 } from '@stream-io/video-react-sdk'
 import '@stream-io/video-react-sdk/dist/css/styles.css'
 import Header from '../components/Header'
@@ -31,9 +33,23 @@ export default function MeetRoom() {
   const endMeetSession = useMutation(api.meetSessions.endMeetSession)
   const createTransaction = useMutation(api.transactions.createTransaction)
 
+  // Vérifier si la session est finalisée
+  useEffect(() => {
+    if (session && session.status === 'completed') {
+      alert('This meeting has already ended.')
+      navigate('/mes-offres')
+      return
+    }
+  }, [session, navigate])
+
   useEffect(() => {
     if (!user || !session) {
       console.log('Waiting for:', { user: !!user, session: !!session })
+      return
+    }
+
+    // Bloquer l'accès si la session est finalisée
+    if (session.status === 'completed') {
       return
     }
 
@@ -172,18 +188,18 @@ export default function MeetRoom() {
             <div>
               <h2 className="text-lg font-bold text-gray-900">{session.demande?.title}</h2>
               <p className="text-sm text-gray-600">
-                Avec: {session.demandeur?.name === user.name ? session.offreur?.name : session.demandeur?.name}
+                With: {session.demandeur?.name === user.name ? session.offreur?.name : session.demandeur?.name}
               </p>
               {session.demande?.duration && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Durée prévue: {session.demande.duration} minutes
+                  Expected duration: {session.demande.duration} minutes
                 </p>
               )}
             </div>
             <div className="flex items-center gap-2">
               <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold flex items-center gap-2">
                 <div className="h-2 w-2 bg-green-600 rounded-full animate-pulse"></div>
-                En direct
+                Live
               </div>
             </div>
           </div>
@@ -193,7 +209,7 @@ export default function MeetRoom() {
         <div className="bg-gray-800 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
           <StreamVideo client={client}>
             <StreamCall call={call}>
-              <MeetingUI onEndCall={handleEndCall} duration={session.demande?.duration} />
+              <MeetingUI onEndCall={handleEndCall} duration={session.demande?.duration} session={session} user={user} />
             </StreamCall>
           </StreamVideo>
         </div>
@@ -202,7 +218,67 @@ export default function MeetRoom() {
   )
 }
 
-function MeetingUI({ onEndCall, duration }) {
+// Custom Participant View Component - Side by Side Layout
+function ParticipantView() {
+  const call = useCall()
+  const { useParticipants } = useCallStateHooks()
+  const participants = useParticipants()
+
+  if (!participants || participants.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-800">
+        <p className="text-white">No participants yet...</p>
+      </div>
+    )
+  }
+
+  // If only one participant, show them centered
+  if (participants.length === 1) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-800 p-4">
+        <div className="w-full max-w-2xl h-full">
+          <StreamParticipantView
+            participant={participants[0]}
+            ParticipantViewUI={null}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Two or more participants - split screen side by side
+  return (
+    <div className="h-full flex gap-2 bg-gray-900 p-2">
+      {/* Left Participant */}
+      <div className="flex-1 relative rounded-lg overflow-hidden bg-gray-800">
+        <StreamParticipantView
+          participant={participants[0]}
+          ParticipantViewUI={null}
+        />
+        <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+          <p className="text-white text-sm font-medium">
+            {participants[0].name || participants[0].userId}
+          </p>
+        </div>
+      </div>
+
+      {/* Right Participant */}
+      <div className="flex-1 relative rounded-lg overflow-hidden bg-gray-800">
+        <StreamParticipantView
+          participant={participants[1]}
+          ParticipantViewUI={null}
+        />
+        <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+          <p className="text-white text-sm font-medium">
+            {participants[1].name || participants[1].userId}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MeetingUI({ onEndCall, duration, session, user }) {
   const { useCallCallingState, useParticipantCount, useMicrophoneState, useCameraState } = useCallStateHooks()
   const callingState = useCallCallingState()
   const participantCount = useParticipantCount()
@@ -220,6 +296,9 @@ function MeetingUI({ onEndCall, duration }) {
   const [showScamButton, setShowScamButton] = useState(false)
   const initialDuration = duration ? duration * 60 : null
   const scamWindowDuration = initialDuration ? initialDuration * 0.25 : null // 25% de la durée
+  
+  // Vérifier si l'utilisateur actuel est le demandeur
+  const isDemandeur = session && user && session.demandeurId === user.userId
 
   // Démarrer le timer uniquement quand les 2 participants sont présents
   useEffect(() => {
@@ -253,7 +332,7 @@ function MeetingUI({ onEndCall, duration }) {
         if (prev <= 1) {
           clearInterval(interval)
           // Fin automatique du meeting (session réussie)
-          alert('Le temps de la session est écoulé. L\'appel va se terminer.')
+          alert('The session time has expired. The call will end.')
           onEndCall(false) // false = pas de scam, session réussie
           return 0
         }
@@ -261,12 +340,12 @@ function MeetingUI({ onEndCall, duration }) {
         // Avertissement à 5 minutes
         if (prev === 300) {
           setIsTimerWarning(true)
-          alert('⚠️ Il reste 5 minutes avant la fin automatique de la session.')
+          alert('⚠️ 5 minutes remaining before automatic session end.')
         }
         
         // Avertissement à 1 minute
         if (prev === 60) {
-          alert('⚠️ Il reste 1 minute avant la fin automatique de la session.')
+          alert('⚠️ 1 minute remaining before automatic session end.')
         }
         
         return prev - 1
@@ -328,15 +407,15 @@ function MeetingUI({ onEndCall, duration }) {
 
   const handleScamReport = () => {
     const confirmed = window.confirm(
-      '⚠️ SIGNALEMENT DE SCAM\n\n' +
-      'Vous êtes sur le point de signaler cette session comme frauduleuse.\n' +
-      'La réunion sera immédiatement terminée et l\'incident sera enregistré.\n\n' +
-      'Êtes-vous sûr de vouloir continuer ?'
+      '⚠️ SCAM REPORT\n\n' +
+      'You are about to report this session as fraudulent.\n' +
+      'The meeting will be immediately terminated and the incident will be recorded.\n\n' +
+      'Are you sure you want to continue?'
     )
     
     if (confirmed) {
       setScamReported(true)
-      alert('🚨 Session signalée comme scam. La réunion va se terminer immédiatement.')
+      alert('🚨 Session reported as scam. The meeting will end immediately.')
       // Terminer immédiatement la session avec le flag scam
       onEndCall(true) // true = isScam
     }
@@ -345,22 +424,23 @@ function MeetingUI({ onEndCall, duration }) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 relative">
-        <SpeakerLayout />
+        {/* Custom Side-by-Side Layout */}
+        <ParticipantView />
         
-        {/* Bouton de signalement de scam (visible pendant les 25% premiers) */}
-        {showScamButton && (
+        {/* Bouton de signalement de scam (visible pendant les 25% premiers ET uniquement pour le demandeur) */}
+        {showScamButton && isDemandeur && (
           <div className="absolute top-4 left-4 z-10">
             <button
               onClick={handleScamReport}
               className="group relative bg-red-600/90 hover:bg-red-700 backdrop-blur-sm px-4 py-3 rounded-lg text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-pulse"
-              title="Signaler un scam"
+              title="Report Scam"
             >
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🚨</span>
                 <div className="text-left">
-                  <div className="text-sm font-bold">Signaler un SCAM</div>
+                  <div className="text-sm font-bold">Report SCAM</div>
                   <div className="text-xs opacity-90">
-                    Disponible pendant {Math.floor(scamWindowDuration / 60)} min
+                    Available for {Math.floor(scamWindowDuration / 60)} min
                   </div>
                 </div>
               </div>
@@ -393,7 +473,7 @@ function MeetingUI({ onEndCall, duration }) {
               <Clock className="h-4 w-4" />
               <span className="font-bold">{formatTime(timeRemaining)}</span>
               {!timerStarted && (
-                <span className="text-xs ml-2">(En attente)</span>
+                <span className="text-xs ml-2">(Waiting)</span>
               )}
             </div>
           )}
@@ -409,7 +489,7 @@ function MeetingUI({ onEndCall, duration }) {
           {/* Message d'attente si un seul participant */}
           {participantCount < 2 && (
             <div className="bg-yellow-500/80 backdrop-blur-sm px-3 py-2 rounded-lg text-white text-xs max-w-[200px]">
-              ⏳ En attente du 2ème participant...
+              ⏳ Waiting for 2nd participant...
             </div>
           )}
         </div>

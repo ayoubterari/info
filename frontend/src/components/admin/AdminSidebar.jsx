@@ -6,6 +6,7 @@ import {
   Settings, 
   BarChart3,
   DollarSign,
+  CreditCard,
   LogOut,
   Menu,
   X
@@ -39,6 +40,11 @@ const menuItems = [
     title: 'Commissions',
     icon: DollarSign,
     href: '/admin/commissions',
+  },
+  {
+    title: 'Payouts',
+    icon: CreditCard,
+    href: '/admin/payouts',
   },
   {
     title: 'Statistiques',

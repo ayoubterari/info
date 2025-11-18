@@ -310,63 +310,67 @@ export default function Home() {
         {/* Creative Banners */}
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {/* Banner 1: Pour les utilisateurs - Créer une demande */}
-          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-black via-gray-800 to-gray-700 p-4 sm:p-6 hover:shadow-2xl hover:shadow-black/50 transition-all duration-500 cursor-pointer border border-gray-700"
+          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-black via-gray-800 to-gray-700 p-6 sm:p-8 hover:shadow-2xl hover:shadow-black/50 transition-all duration-500 cursor-pointer border border-gray-700 min-h-[200px] flex flex-col justify-between"
                onClick={() => setCreateDemandeModalOpen(true)}>
             {/* Animated background effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <h3 className="text-sm sm:text-lg font-bold text-white">Need Human Help?</h3>
+            {/* Large Icon at top */}
+            <div className="relative z-10 flex justify-center mb-4">
+              <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm group-hover:scale-110 transition-transform duration-500">
+                <Users className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
               </div>
-              
-              <p className="text-gray-200 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
-                AI not enough? Create a request and get help from qualified human experts. 
-                Receive personalized answers and solutions tailored to your needs.
+            </div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Need Human Help?</h3>
+              <p className="text-gray-300 text-sm mb-4">
+                Get expert solutions tailored to you
               </p>
               
-              <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm group-hover:gap-3 transition-all">
+              <div className="inline-flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-3 transition-all bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
                 <span>Create Request</span>
-                <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
             {/* Decorative elements */}
             <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
             <div className="absolute -left-4 -top-4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           </div>
 
           {/* Banner 2: Pour les humains - Voir les demandes */}
-          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900 via-gray-700 to-gray-600 p-4 sm:p-6 hover:shadow-2xl hover:shadow-gray-800/50 transition-all duration-500 cursor-pointer border border-gray-600"
+          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900 via-gray-700 to-gray-600 p-6 sm:p-8 hover:shadow-2xl hover:shadow-gray-800/50 transition-all duration-500 cursor-pointer border border-gray-600 min-h-[200px] flex flex-col justify-between"
                onClick={() => navigate('/demandes')}>
             {/* Animated background effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                  <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <h3 className="text-sm sm:text-lg font-bold text-white">Are You an Expert?</h3>
+            {/* Large Icon at top */}
+            <div className="relative z-10 flex justify-center mb-4">
+              <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm group-hover:scale-110 transition-transform duration-500">
+                <Lightbulb className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
               </div>
-              
-              <p className="text-gray-200 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
-                Share your knowledge and help the community! Browse help requests, 
-                offer your services and earn money by solving problems.
+            </div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Are You an Expert?</h3>
+              <p className="text-gray-300 text-sm mb-4">
+                Share knowledge, earn money
               </p>
               
-              <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm group-hover:gap-3 transition-all">
+              <div className="inline-flex items-center gap-2 text-white font-semibold text-sm group-hover:gap-3 transition-all bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
                 <span>View Requests</span>
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
               </div>
             </div>
 
             {/* Decorative elements */}
             <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
             <div className="absolute -left-4 -top-4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
           </div>
         </div>
       </main>

@@ -12,7 +12,7 @@ import AdminUsers from './pages/AdminUsers'
 import AdminDemandes from './pages/AdminDemandes'
 import AdminOffres from './pages/AdminOffres'
 import AdminCommissions from './pages/AdminCommissions'
-import StripeOnboarding from './pages/StripeOnboarding'
+import AdminPayouts from './pages/AdminPayouts'
 import DebugAuth from './pages/DebugAuth'
 import { OffreAcceptedNotification } from './components/OffreAcceptedNotification'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
@@ -33,8 +33,7 @@ export default function App() {
         <Route path="/admin/demandes" element={<AdminDemandes />} />
         <Route path="/admin/offres" element={<AdminOffres />} />
         <Route path="/admin/commissions" element={<AdminCommissions />} />
-        <Route path="/stripe-onboarding" element={<StripeOnboarding />} />
-        <Route path="/stripe-onboarding-demo" element={<StripeOnboarding />} />
+        <Route path="/admin/payouts" element={<AdminPayouts />} />
         <Route path="/debug-auth" element={<DebugAuth />} />
         <Route path="/meet/:sessionId" element={<MeetRoom />} />
       </Routes>

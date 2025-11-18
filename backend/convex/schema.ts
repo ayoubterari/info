@@ -11,15 +11,23 @@ export default defineSchema({
     tokenIdentifier: v.optional(v.string()),
     questionsAsked: v.optional(v.number()), // Compteur de questions posées
     questionsLimit: v.optional(v.number()), // Limite de questions (par défaut 2)
-    // Stripe Connect fields
-    stripeConnectAccountId: v.optional(v.string()), // ID du compte Stripe Connect
-    stripeOnboardingComplete: v.optional(v.boolean()), // Onboarding terminé
-    stripeBankAccountLast4: v.optional(v.string()), // 4 derniers chiffres du compte bancaire
-    stripeAccountStatus: v.optional(v.string()), // active, pending, restricted
+    // Informations bancaires pour les payouts manuels
+    bankAccountInfo: v.optional(v.object({
+      accountHolderName: v.string(),
+      bankName: v.string(),
+      accountNumber: v.string(), // Crypté côté serveur en production
+      routingNumber: v.optional(v.string()),
+      iban: v.optional(v.string()),
+      swift: v.optional(v.string()),
+    })),
+    // Anciens champs Stripe Connect (deprecated - à supprimer après migration)
+    stripeConnectAccountId: v.optional(v.string()),
+    stripeOnboardingComplete: v.optional(v.boolean()),
+    stripeBankAccountLast4: v.optional(v.string()),
+    stripeAccountStatus: v.optional(v.string()),
   })
     .index("by_email", ["email"])
-    .index("by_token", ["tokenIdentifier"])
-    .index("by_stripe_account", ["stripeConnectAccountId"]),
+    .index("by_token", ["tokenIdentifier"]),
 
   // Table des articles/posts
   posts: defineTable({
@@ -131,11 +139,21 @@ export default defineSchema({
     commissionRate: v.number(), // Taux de commission appliqué (%)
     commissionAmount: v.number(), // Montant de la commission
     providerAmount: v.number(), // Montant reçu par le prestataire
-    // Stripe fields
+    // Stripe fields (paiement classique)
     stripePaymentIntentId: v.optional(v.string()), // ID du Payment Intent Stripe
-    stripeTransferId: v.optional(v.string()), // ID du Transfer Stripe vers le prestataire
     stripePaymentMethod: v.optional(v.string()), // Méthode de paiement (card, bank_transfer, etc.)
     stripeFees: v.optional(v.number()), // Frais Stripe (2.9% + $0.30)
+    // Payout fields (redistribution manuelle)
+    payoutStatus: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed")
+    )),
+    payoutMethod: v.optional(v.string()), // bank_transfer, paypal, etc.
+    payoutDate: v.optional(v.number()), // Date du payout
+    payoutReference: v.optional(v.string()), // Référence du virement/transaction
+    payoutNotes: v.optional(v.string()), // Notes admin
     status: v.union(
       v.literal("pending"), 
       v.literal("completed"), 
@@ -148,5 +166,6 @@ export default defineSchema({
     .index("by_demandeur", ["demandeurId"])
     .index("by_offreur", ["offreurId"])
     .index("by_stripe_payment", ["stripePaymentIntentId"])
+    .index("by_payout_status", ["payoutStatus"])
     .index("by_status", ["status"]),
 });
