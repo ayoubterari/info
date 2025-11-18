@@ -27,7 +27,6 @@ export default function Payment() {
   const commissionRate = useQuery(api.appSettings.getCommissionRate)
   
   const updatePaymentStatus = useMutation(api.meetSessions.updatePaymentStatus)
-  const createTransaction = useMutation(api.transactions.createTransaction)
 
   useEffect(() => {
     if (!user) {

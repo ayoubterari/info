@@ -62,3 +62,52 @@ export const removeStripeConnectFields = mutation({
     };
   },
 });
+
+// Migration: Supprimer les transactions en double
+export const removeDuplicateTransactions = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const transactions = await ctx.db.query("transactions").collect();
+    
+    // Grouper les transactions par sessionId
+    const transactionsBySession = new Map<string, any[]>();
+    
+    for (const transaction of transactions) {
+      const sessionId = transaction.sessionId;
+      if (!transactionsBySession.has(sessionId)) {
+        transactionsBySession.set(sessionId, []);
+      }
+      transactionsBySession.get(sessionId)!.push(transaction);
+    }
+    
+    let deleted = 0;
+    
+    // Pour chaque session avec des doublons
+    for (const [sessionId, sessionTransactions] of transactionsBySession) {
+      if (sessionTransactions.length > 1) {
+        // Garder la plus ancienne transaction (première créée)
+        const sortedTransactions = sessionTransactions.sort((a, b) => a.createdAt - b.createdAt);
+        const toKeep = sortedTransactions[0];
+        const toDelete = sortedTransactions.slice(1);
+        
+        console.log(`🔍 Session ${sessionId}: ${sessionTransactions.length} transactions trouvées`);
+        console.log(`   ✅ Garder: ${toKeep._id} (créée à ${new Date(toKeep.createdAt).toISOString()})`);
+        
+        // Supprimer les doublons
+        for (const duplicate of toDelete) {
+          await ctx.db.delete(duplicate._id);
+          deleted++;
+          console.log(`   ❌ Supprimer: ${duplicate._id} (créée à ${new Date(duplicate.createdAt).toISOString()})`);
+        }
+      }
+    }
+    
+    return {
+      message: `Migration terminée: ${deleted} transactions en double supprimées`,
+      deleted,
+      totalTransactions: transactions.length,
+      sessionsWithDuplicates: Array.from(transactionsBySession.entries())
+        .filter(([_, txs]) => txs.length > 1).length,
+    };
+  },
+});

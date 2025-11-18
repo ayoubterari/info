@@ -13,6 +13,25 @@ export const createTransaction = mutation({
     stripePaymentMethod: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // ✅ VÉRIFIER SI UNE TRANSACTION EXISTE DÉJÀ POUR CETTE SESSION
+    const existingTransaction = await ctx.db
+      .query("transactions")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .first();
+
+    if (existingTransaction) {
+      console.log(`⚠️ Transaction déjà existante pour la session ${args.sessionId}`);
+      return {
+        transactionId: existingTransaction._id,
+        totalAmount: existingTransaction.totalAmount,
+        commissionRate: existingTransaction.commissionRate,
+        commissionAmount: existingTransaction.commissionAmount,
+        providerAmount: existingTransaction.providerAmount,
+        stripeFees: existingTransaction.stripeFees,
+        alreadyExists: true,
+      };
+    }
+
     // Récupérer le taux de commission
     const commissionSetting = await ctx.db
       .query("appSettings")
@@ -50,6 +69,20 @@ export const createTransaction = mutation({
     console.log(`   Commission (${commissionRate}%): $${commissionAmount.toFixed(2)}`);
     console.log(`   Frais Stripe: $${stripeFees.toFixed(2)}`);
     console.log(`   Prestataire reçoit: $${providerAmount.toFixed(2)}`);
+
+    // Créditer le wallet du prestataire
+    const offreur = await ctx.db.get(args.offreurId);
+    if (offreur) {
+      const currentBalance = offreur.walletBalance || 0;
+      const newBalance = currentBalance + providerAmount;
+      
+      await ctx.db.patch(args.offreurId, {
+        walletBalance: newBalance,
+      });
+
+      console.log(`💰 Wallet du prestataire crédité:`);
+      console.log(`   ${offreur.name}: $${currentBalance} → $${newBalance} (+$${providerAmount})`);
+    }
 
     return {
       transactionId,

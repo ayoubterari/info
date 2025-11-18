@@ -246,10 +246,12 @@ function ParticipantView() {
     )
   }
 
-  // Two or more participants - split screen side by side
+  // Two or more participants - split screen
+  // Mobile: vertical layout (demandeur en haut, prestataire en bas)
+  // Desktop: horizontal layout (côte à côte)
   return (
-    <div className="h-full flex gap-2 bg-gray-900 p-2">
-      {/* Left Participant */}
+    <div className="h-full flex flex-col md:flex-row gap-2 bg-gray-900 p-2">
+      {/* Premier Participant (Demandeur en haut sur mobile, gauche sur desktop) */}
       <div className="flex-1 relative rounded-lg overflow-hidden bg-gray-800">
         <StreamParticipantView
           participant={participants[0]}
@@ -262,7 +264,7 @@ function ParticipantView() {
         </div>
       </div>
 
-      {/* Right Participant */}
+      {/* Deuxième Participant (Prestataire en bas sur mobile, droite sur desktop) */}
       <div className="flex-1 relative rounded-lg overflow-hidden bg-gray-800">
         <StreamParticipantView
           participant={participants[1]}

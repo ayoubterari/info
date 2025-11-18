@@ -11,6 +11,8 @@ export default defineSchema({
     tokenIdentifier: v.optional(v.string()),
     questionsAsked: v.optional(v.number()), // Compteur de questions posées
     questionsLimit: v.optional(v.number()), // Limite de questions (par défaut 2)
+    // Wallet balance
+    walletBalance: v.optional(v.number()), // Balance disponible en dollars
     // Informations bancaires pour les payouts manuels
     bankAccountInfo: v.optional(v.object({
       accountHolderName: v.string(),
@@ -168,4 +170,34 @@ export default defineSchema({
     .index("by_stripe_payment", ["stripePaymentIntentId"])
     .index("by_payout_status", ["payoutStatus"])
     .index("by_status", ["status"]),
+
+  // Table des demandes de payout (retrait du wallet)
+  payoutRequests: defineTable({
+    userId: v.id("users"), // Utilisateur qui demande le payout
+    amount: v.number(), // Montant demandé
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("rejected")
+    ),
+    bankAccountInfo: v.object({
+      accountHolderName: v.string(),
+      bankName: v.string(),
+      accountNumber: v.string(),
+      iban: v.optional(v.string()),
+      swift: v.optional(v.string()),
+    }),
+    // Admin fields
+    processedBy: v.optional(v.id("users")), // Admin qui a traité
+    processedAt: v.optional(v.number()),
+    payoutMethod: v.optional(v.string()), // bank_transfer, paypal, etc.
+    payoutReference: v.optional(v.string()), // Référence du virement
+    adminNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_date", ["createdAt"]),
 });

@@ -26,6 +26,7 @@ import type * as stream from "../stream.js";
 import type * as transactions from "../transactions.js";
 import type * as userQuestions from "../userQuestions.js";
 import type * as users from "../users.js";
+import type * as wallet from "../wallet.js";
 
 import type {
   ApiFromModules,
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   transactions: typeof transactions;
   userQuestions: typeof userQuestions;
   users: typeof users;
+  wallet: typeof wallet;
 }>;
 
 /**

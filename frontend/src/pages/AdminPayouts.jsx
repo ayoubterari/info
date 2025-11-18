@@ -33,6 +33,10 @@ export default function AdminPayouts() {
   const pendingPayouts = useQuery(api.payments.getPendingPayouts)
   const payoutStats = useQuery(api.payments.getPayoutStats)
   const markPayoutCompleted = useMutation(api.payments.markPayoutAsCompleted)
+  
+  // Payout requests from users
+  const payoutRequests = useQuery(api.wallet.getAllPayoutRequests, { status: "pending" })
+  const processPayoutRequest = useMutation(api.wallet.processPayoutRequest)
 
   const handleMarkAsCompleted = async () => {
     if (!selectedTransaction || !payoutReference.trim()) {
@@ -144,12 +148,146 @@ export default function AdminPayouts() {
           </div>
         )}
 
-        {/* Liste des payouts en attente */}
+        {/* Demandes de retrait des utilisateurs */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900">
+              Demandes de retrait des utilisateurs
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Retraits demandés depuis les wallets utilisateurs
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            {!payoutRequests ? (
+              <div className="p-8 text-center text-gray-500">
+                Chargement...
+              </div>
+            ) : payoutRequests.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <p className="font-medium">Aucune demande en attente</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Utilisateur
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Montant
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Info bancaire
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {payoutRequests.map((request) => (
+                    <tr key={request._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {request.userName}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {request.userEmail}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-bold text-green-600">
+                          ${request.amount.toFixed(2)}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {new Date(request.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm">
+                          <p className="font-medium text-gray-900">
+                            {request.bankAccountInfo.bankName}
+                          </p>
+                          <p className="text-gray-500 font-mono text-xs">
+                            {request.bankAccountInfo.accountNumber}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={async () => {
+                              const ref = prompt('Référence du paiement:')
+                              if (ref) {
+                                try {
+                                  await processPayoutRequest({
+                                    payoutRequestId: request._id,
+                                    adminId: user.userId,
+                                    status: 'completed',
+                                    payoutMethod: 'bank_transfer',
+                                    payoutReference: ref,
+                                  })
+                                  alert('✅ Payout approuvé')
+                                } catch (error) {
+                                  alert('❌ Erreur: ' + error.message)
+                                }
+                              }
+                            }}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Approuver
+                          </Button>
+                          <Button
+                            onClick={async () => {
+                              const reason = prompt('Raison du rejet:')
+                              if (reason) {
+                                try {
+                                  await processPayoutRequest({
+                                    payoutRequestId: request._id,
+                                    adminId: user.userId,
+                                    status: 'rejected',
+                                    rejectionReason: reason,
+                                  })
+                                  alert('✅ Payout rejeté')
+                                } catch (error) {
+                                  alert('❌ Erreur: ' + error.message)
+                                }
+                              }
+                            }}
+                            size="sm"
+                            variant="outline"
+                            className="border-red-600 text-red-600 hover:bg-red-50"
+                          >
+                            Rejeter
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        {/* Liste des payouts en attente (anciennes transactions) */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">
-              Payouts en attente de traitement
+              Payouts transactions en attente
             </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Anciennes transactions à redistribuer manuellement
+            </p>
           </div>
 
           <div className="overflow-x-auto">
