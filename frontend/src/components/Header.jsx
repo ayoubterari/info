@@ -67,7 +67,7 @@ export default function Header() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-black">SINARAZI</h1>
+              <h1 className="text-2xl font-bold text-black">APP</h1>
             </div>
 
             {/* Navigation Links */}
@@ -77,13 +77,13 @@ export default function Header() {
                   onClick={() => navigate('/offres')}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  Offres reçues
+                  Received Offers
                 </button>
                 <button
                   onClick={() => navigate('/mes-offres')}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  Mes offres
+                  My Offers
                 </button>
                 
                 {/* Bouton Stripe Onboarding */}
@@ -97,9 +97,9 @@ export default function Header() {
                 >
                   <CreditCard size={16} />
                   {accountStatus?.onboardingComplete ? (
-                    'Paiements ✓'
+                    'Payments ✓'
                   ) : (
-                    'Configurer paiements'
+                    'Setup Payments'
                   )}
                 </button>
               </nav>
@@ -109,7 +109,7 @@ export default function Header() {
             <div className="flex items-center space-x-3">
               <InstallButton />
               {loading ? (
-                <div className="px-4 py-2 text-gray-500">Chargement...</div>
+                <div className="px-4 py-2 text-gray-500">Loading...</div>
               ) : user ? (
                 <div className="flex items-center space-x-3">
                   <button
@@ -124,7 +124,7 @@ export default function Header() {
                     className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <LogOut size={18} />
-                    <span className="font-medium">Déconnexion</span>
+                    <span className="font-medium">Sign Out</span>
                   </button>
                 </div>
               ) : (

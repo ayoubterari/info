@@ -42,9 +42,9 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const categories = [
-    { value: 'general', label: 'Général' },
-    { value: 'technique', label: 'Technique' },
-    { value: 'conseil', label: 'Conseil' },
+    { value: 'general', label: 'General' },
+    { value: 'technique', label: 'Technical' },
+    { value: 'conseil', label: 'Advice' },
     { value: 'service', label: 'Service' },
   ]
 
@@ -164,12 +164,12 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
       onSuccess?.()
       onOpenChange(false)
       
-      // Rediriger vers la page des offres
-      alert('Votre demande a été créée avec succès! Vous allez être redirigé vers la page des offres.')
+      // Redirect to offers page
+      alert('Your request has been created successfully! You will be redirected to the offers page.')
       navigate('/offres')
     } catch (error) {
       console.error('Error creating demande:', error)
-      alert('Erreur lors de la création de la demande')
+      alert('Error creating the request')
     } finally {
       setIsSubmitting(false)
     }
@@ -179,28 +179,28 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-1">
-          <DialogTitle className="text-lg sm:text-xl">Nouvelle Demande d'Aide</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">New Help Request</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Remplissez le formulaire pour créer une nouvelle demande
+            Fill out the form to create a new request
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="title">Titre *</Label>
+            <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="Ex: Besoin d'aide pour..."
+              placeholder="Ex: Need help with..."
               required
               disabled={!user}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="category">Catégorie *</Label>
+            <Label htmlFor="category">Category *</Label>
             <select
               id="category"
               name="category"
@@ -223,7 +223,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Décrivez votre besoin en détail..."
+              placeholder="Describe your need in detail..."
               rows={3}
               required
               disabled={!user}
@@ -233,7 +233,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="price" className="text-xs sm:text-sm">Prix (USD) *</Label>
+              <Label htmlFor="price" className="text-xs sm:text-sm">Price (USD) *</Label>
               <Input
                 id="price"
                 name="price"
@@ -249,7 +249,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="duration" className="text-xs sm:text-sm">Durée (min)</Label>
+              <Label htmlFor="duration" className="text-xs sm:text-sm">Duration (min)</Label>
               <Input
                 id="duration"
                 name="duration"
@@ -269,7 +269,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {/* Audio Recording */}
             <div className="space-y-1.5">
-              <Label className="text-xs sm:text-sm">Vocal</Label>
+              <Label className="text-xs sm:text-sm">Voice</Label>
               <div className="flex items-center gap-2">
                 {!audioUrl ? (
                   <Button
@@ -298,7 +298,7 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
 
             {/* File Upload */}
             <div className="space-y-1.5">
-              <Label className="text-xs sm:text-sm">Fichiers</Label>
+              <Label className="text-xs sm:text-sm">Files</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -341,10 +341,10 @@ export function CreateDemandeModal({ open, onOpenChange, onSuccess }) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting || !user}>
-              {isSubmitting ? 'Création...' : !user ? 'Connectez-vous d\'abord' : 'Créer la demande'}
+              {isSubmitting ? 'Creating...' : !user ? 'Sign in first' : 'Create Request'}
             </Button>
           </DialogFooter>
         </form>

@@ -161,12 +161,12 @@ export default function Home() {
         {/* Hero Section - AI Part */}
         {(
           <div className="text-center mb-4 sm:mb-6">
-            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-5">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold">
                 <span className="bg-gradient-to-r from-black via-gray-700 to-gray-500 bg-clip-text text-transparent">Ask Anything to AI</span>
               </h1>
-              <div className="p-2 sm:p-3 bg-black/10 rounded-xl">
-                <Brain className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-black" />
+              <div className="p-1.5 sm:p-2.5 bg-black/10 rounded-xl">
+                <Brain className="w-5 h-5 sm:w-7 sm:h-7 md:w-9 md:h-9 text-black" />
               </div>
             </div>
           </div>
@@ -212,8 +212,8 @@ export default function Home() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={user ? "Ask anything... Describe your idea, ask a question, or request code..." : "Connectez-vous pour poser une question..."}
-                className="w-full bg-transparent text-black placeholder-gray-500 outline-none resize-none text-xs sm:text-sm md:text-base leading-relaxed disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                placeholder={user ? "Ask anything... Describe your idea, ask a question, or request code..." : "Ask anything... Describe your idea, ask a question, or request code..."}
+                className="w-full bg-transparent text-black placeholder-gray-400 outline-none resize-none text-xs sm:text-sm md:text-base leading-relaxed disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder-gray-300"
                 rows="3"
                 maxLength="2000"
                 disabled={!user}
@@ -223,8 +223,8 @@ export default function Home() {
               {user && userStats && userStats.remaining <= 1 && userStats.remaining > 0 && (
                 <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-xs text-yellow-800">
-                    ⚠️ Attention : Il vous reste seulement {userStats.remaining} question{userStats.remaining > 1 ? 's' : ''}. 
-                    Après cela, vous serez redirigé vers "J'ai besoin d'aide" pour une assistance humaine.
+                    ⚠️ Warning: You have only {userStats.remaining} question{userStats.remaining > 1 ? 's' : ''} left. 
+                    After that, you will be redirected to "Need Help" for human assistance.
                   </p>
                 </div>
               )}
@@ -284,7 +284,7 @@ export default function Home() {
                       className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-5 py-1.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 bg-gray-600 text-white hover:bg-gray-700 hover:shadow-lg hover:shadow-gray-600/30 flex-1 sm:flex-initial"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Connectez-vous</span>
+                      <span className="hidden sm:inline">Sign In</span>
                     </button>
                   )}
                 </div>
@@ -296,12 +296,12 @@ export default function Home() {
         </form>
 
         {/* Human Section Title */}
-        <div className="text-center my-6 sm:my-8 md:my-10">
+        <div className="text-center my-5 sm:my-7 md:my-9">
           <div className="flex items-center justify-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 bg-black/10 rounded-xl">
-              <Users className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-black" />
+            <div className="p-1.5 sm:p-2.5 bg-black/10 rounded-xl">
+              <Users className="w-5 h-5 sm:w-7 sm:h-7 md:w-9 md:h-9 text-black" />
             </div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold">
               <span className="bg-gradient-to-r from-black via-gray-700 to-gray-500 bg-clip-text text-transparent">Or Get Everything from Human</span>
             </h2>
           </div>
@@ -320,16 +320,16 @@ export default function Home() {
                 <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                   <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-base sm:text-xl font-bold text-white">Besoin d'aide humaine ?</h3>
+                <h3 className="text-sm sm:text-lg font-bold text-white">Need Human Help?</h3>
               </div>
               
               <p className="text-gray-200 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
-                L'IA ne suffit pas ? Créez une demande et obtenez l'aide d'experts humains qualifiés. 
-                Recevez des réponses personnalisées et des solutions adaptées à vos besoins.
+                AI not enough? Create a request and get help from qualified human experts. 
+                Receive personalized answers and solutions tailored to your needs.
               </p>
               
               <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm group-hover:gap-3 transition-all">
-                <span>Créer une demande</span>
+                <span>Create Request</span>
                 <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
@@ -350,16 +350,16 @@ export default function Home() {
                 <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                   <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-base sm:text-xl font-bold text-white">Vous êtes expert ?</h3>
+                <h3 className="text-sm sm:text-lg font-bold text-white">Are You an Expert?</h3>
               </div>
               
               <p className="text-gray-200 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
-                Partagez vos connaissances et aidez la communauté ! Consultez les demandes d'aide, 
-                proposez vos services et gagnez de l'argent en résolvant des problèmes.
+                Share your knowledge and help the community! Browse help requests, 
+                offer your services and earn money by solving problems.
               </p>
               
               <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm group-hover:gap-3 transition-all">
-                <span>Voir les demandes</span>
+                <span>View Requests</span>
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
