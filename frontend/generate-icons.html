@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Générateur d'icônes PWA</title>
+</head>
+<body>
+    <h1>Générateur d'icônes PWA pour FreeL AI</h1>
+    <p>Cliquez sur les boutons pour télécharger les icônes</p>
+    
+    <button onclick="generateIcon(192)">Télécharger icon-192x192.png</button>
+    <button onclick="generateIcon(512)">Télécharger icon-512x512.png</button>
+    
+    <script>
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Fond noir
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Cercle blanc
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = size * 0.05;
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.35, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Texte "AI"
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${size * 0.3}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('AI', size / 2, size / 2);
+            
+            // Télécharger
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>
