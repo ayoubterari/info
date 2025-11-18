@@ -114,15 +114,25 @@ export default function PWAInstallPrompt() {
             }
           </p>
 
-          {/* Instructions pour iOS */}
-          {isIOS && (
+          {/* Instructions d'installation */}
+          {!deferredPrompt && (
             <div className="bg-white/10 rounded-lg p-3 mb-4 text-xs text-gray-200">
-              <p className="font-semibold mb-2">Comment installer :</p>
-              <ol className="space-y-1 list-decimal list-inside">
-                <li>Appuyez sur <Share className="w-3 h-3 inline" /> (Partager)</li>
-                <li>Sélectionnez "Sur l'écran d'accueil"</li>
-                <li>Appuyez sur "Ajouter"</li>
-              </ol>
+              <p className="font-semibold mb-2">📱 Comment installer :</p>
+              {isIOS ? (
+                <ol className="space-y-1.5 list-decimal list-inside">
+                  <li>Appuyez sur le bouton <Share className="w-3 h-3 inline mx-1" /> <strong>Partager</strong> en bas de Safari</li>
+                  <li>Faites défiler et sélectionnez <strong>"Sur l'écran d'accueil"</strong></li>
+                  <li>Appuyez sur <strong>"Ajouter"</strong> en haut à droite</li>
+                </ol>
+              ) : isAndroid ? (
+                <ol className="space-y-1.5 list-decimal list-inside">
+                  <li>Appuyez sur le menu <strong>⋮</strong> (3 points) en haut à droite</li>
+                  <li>Sélectionnez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong></li>
+                  <li>Confirmez l'installation</li>
+                </ol>
+              ) : (
+                <p>Utilisez le menu de votre navigateur pour ajouter cette app à votre écran d'accueil.</p>
+              )}
             </div>
           )}
 
@@ -134,14 +144,14 @@ export default function PWAInstallPrompt() {
                 className="flex-1 bg-white text-black px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                Installer
+                Installer maintenant
               </button>
             ) : (
               <button
                 onClick={handleDismiss}
                 className="flex-1 bg-white text-black px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-all duration-300"
               >
-                Compris !
+                J'ai compris
               </button>
             )}
             <button
