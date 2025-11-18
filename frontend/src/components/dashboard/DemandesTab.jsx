@@ -175,7 +175,7 @@ export function DemandesTab() {
 
       {/* Statistiques */}
       {demandes && demandes.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>
@@ -193,7 +193,7 @@ export function DemandesTab() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>En cours</CardDescription>
-              <CardTitle className="text-3xl text-blue-600">
+              <CardTitle className="text-3xl text-gray-600">
                 {demandes.filter(d => d.status === 'in_progress').length}
               </CardTitle>
             </CardHeader>
@@ -203,6 +203,14 @@ export function DemandesTab() {
               <CardDescription>Terminées</CardDescription>
               <CardTitle className="text-3xl text-green-600">
                 {demandes.filter(d => d.status === 'completed').length}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Annulées</CardDescription>
+              <CardTitle className="text-3xl text-red-600">
+                {demandes.filter(d => d.status === 'cancelled').length}
               </CardTitle>
             </CardHeader>
           </Card>

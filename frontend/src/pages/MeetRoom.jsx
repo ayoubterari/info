@@ -29,6 +29,7 @@ export default function MeetRoom() {
   )
   const generateToken = useAction(api.stream.generateStreamToken)
   const endMeetSession = useMutation(api.meetSessions.endMeetSession)
+  const createTransaction = useMutation(api.transactions.createTransaction)
 
   useEffect(() => {
     if (!user || !session) {
@@ -82,7 +83,7 @@ export default function MeetRoom() {
     }
   }, [user, session])
 
-  const handleEndCall = async () => {
+  const handleEndCall = async (isScam = false) => {
     try {
       if (call) {
         await call.leave()
@@ -91,7 +92,29 @@ export default function MeetRoom() {
         await client.disconnectUser()
       }
       if (sessionId) {
-        await endMeetSession({ sessionId })
+        // Terminer la session
+        await endMeetSession({ sessionId, isScam })
+
+        // ✅ IMPORTANT: Créer la transaction UNIQUEMENT si ce n'est PAS un scam
+        if (!isScam && session) {
+          console.log('💰 Session terminée avec succès, création de la transaction...')
+          try {
+            const transactionResult = await createTransaction({
+              sessionId,
+              offreId: session.offreId,
+              demandeurId: session.demandeurId,
+              offreurId: session.offreurId,
+              totalAmount: session.offre?.proposedPrice || 0,
+            })
+            console.log('✅ Transaction créée avec succès:', transactionResult)
+          } catch (txError) {
+            console.error('❌ Erreur lors de la création de la transaction:', txError)
+          }
+        } else if (isScam) {
+          console.log('🚨 SCAM SIGNALÉ - Aucune transaction créée, aucun argent transféré')
+          console.log('❌ Le prestataire ne recevra RIEN')
+          console.log('💰 L\'argent sera remboursé au demandeur')
+        }
       }
       navigate('/dashboard')
     } catch (error) {
@@ -229,9 +252,9 @@ function MeetingUI({ onEndCall, duration }) {
       setTimeRemaining(prev => {
         if (prev <= 1) {
           clearInterval(interval)
-          // Fin automatique du meeting
+          // Fin automatique du meeting (session réussie)
           alert('Le temps de la session est écoulé. L\'appel va se terminer.')
-          onEndCall()
+          onEndCall(false) // false = pas de scam, session réussie
           return 0
         }
         
@@ -314,8 +337,8 @@ function MeetingUI({ onEndCall, duration }) {
     if (confirmed) {
       setScamReported(true)
       alert('🚨 Session signalée comme scam. La réunion va se terminer immédiatement.')
-      // Terminer immédiatement la session
-      onEndCall()
+      // Terminer immédiatement la session avec le flag scam
+      onEndCall(true) // true = isScam
     }
   }
 

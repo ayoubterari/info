@@ -7,6 +7,7 @@ import ResponseModal from '../components/ResponseModal'
 import HistoryModal from '../components/HistoryModal'
 import AuthModal from '../components/AuthModal'
 import Header from '../components/Header'
+import { CreateDemandeModal } from '../components/dashboard/CreateDemandeModal'
 import { useOpenAI } from '../hooks/useOpenAI'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -43,6 +44,9 @@ export default function Home() {
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState('signin')
+  
+  // Create demande modal state
+  const [createDemandeModalOpen, setCreateDemandeModalOpen] = useState(false)
 
   // Réinitialiser les messages quand l'utilisateur change
   useEffect(() => {
@@ -153,136 +157,47 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 md:py-0">
-        {/* Hero Section */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-start px-3 sm:px-4 md:px-6 lg:px-8 pt-3 sm:pt-4 pb-6 sm:pb-8 overflow-y-auto">
+        {/* Hero Section - AI Part */}
         {(
-          <div className="text-center mb-10 md:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-5">
-              <span className="block">Ask Anything</span>
-              <span className="bg-gradient-to-r from-black via-gray-700 to-gray-500 bg-clip-text text-transparent">Get Everything</span>
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-6">
-              Harness the power of multiple AI agents. Choose your expert, ask your question, and get instant answers.
-            </p>
+          <div className="text-center mb-4 sm:mb-6">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold">
+                <span className="bg-gradient-to-r from-black via-gray-700 to-gray-500 bg-clip-text text-transparent">Ask Anything to AI</span>
+              </h1>
+              <div className="p-2 sm:p-3 bg-black/10 rounded-xl">
+                <Brain className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-black" />
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Agent Selector */}
-        <div className="w-full max-w-4xl mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-gray-700">Select AI Agent</label>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="md:hidden text-xs bg-black/10 hover:bg-black/20 border border-black/20 px-2 py-0.5 rounded-full transition"
-            >
-              {isExpanded ? 'Hide' : 'Show'} All
-            </button>
-          </div>
-
-          {/* Agent Grid - Desktop */}
-          <div className="hidden md:grid grid-cols-5 gap-2 mb-5">
+        {/* Agent Selector - Compact Version */}
+        <div className="w-full max-w-4xl mb-3 sm:mb-4">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
             {agents.map((agent) => {
               const Icon = agent.icon
               return (
                 <button
                   key={agent.id}
                   onClick={() => setSelectedAgent(agent)}
-                  className={`group relative p-3 rounded-lg border-2 transition-all duration-300 ${
+                  className={`group relative px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border-2 transition-all duration-300 flex items-center gap-1.5 sm:gap-2 ${
                     selectedAgent.id === agent.id
-                      ? 'border-black bg-black/10 shadow-lg shadow-black/20'
+                      ? 'border-black bg-black/10 shadow-md'
                       : 'border-black/20 bg-black/5 hover:border-black/40 hover:bg-black/10'
                   }`}
                 >
-                  <div className="flex flex-col items-center gap-1.5">
-                    <Icon className={`w-5 h-5 transition-all ${
-                      selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600 group-hover:text-gray-800'
-                    }`} />
-                    <span className={`text-xs font-semibold transition-all ${
-                      selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600 group-hover:text-gray-800'
-                    }`}>
-                      {agent.name}
-                    </span>
-                  </div>
+                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-all ${
+                    selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600 group-hover:text-gray-800'
+                  }`} />
+                  <span className={`text-[10px] sm:text-xs font-semibold transition-all ${
+                    selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600 group-hover:text-gray-800'
+                  }`}>
+                    {agent.name}
+                  </span>
                 </button>
               )
             })}
-          </div>
-
-          {/* Agent Carousel - Mobile */}
-          <div className="md:hidden mb-5">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {agents.map((agent) => {
-                const Icon = agent.icon
-                return (
-                  <button
-                    key={agent.id}
-                    onClick={() => {
-                      setSelectedAgent(agent)
-                      setIsExpanded(false)
-                    }}
-                    className={`flex-shrink-0 p-2 rounded-lg border-2 transition-all ${
-                      selectedAgent.id === agent.id
-                        ? 'border-black bg-black/10'
-                        : 'border-black/20 bg-black/5'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${
-                      selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600'
-                    }`} />
-                  </button>
-                )
-              })}
-            </div>
-            {isExpanded && (
-              <div className="grid grid-cols-2 gap-2">
-                {agents.map((agent) => {
-                  const Icon = agent.icon
-                  return (
-                    <button
-                      key={agent.id}
-                      onClick={() => {
-                        setSelectedAgent(agent)
-                        setIsExpanded(false)
-                      }}
-                      className={`p-2 rounded-lg border-2 transition-all text-left ${
-                        selectedAgent.id === agent.id
-                          ? 'border-black bg-black/10'
-                          : 'border-black/20 bg-black/5'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 mb-1 ${
-                        selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600'
-                      }`} />
-                      <p className={`text-xs font-semibold ${
-                        selectedAgent.id === agent.id ? 'text-black' : 'text-gray-600'
-                      }`}>
-                        {agent.name}
-                      </p>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Selected Agent Info */}
-          <div className="flex items-center gap-2 p-3 bg-black/5 border border-black/10 rounded-lg mb-5">
-            {(() => {
-              const Icon = selectedAgent.icon
-              return <Icon className="w-4 h-4 text-black" />
-            })()}
-            <div className="flex-1">
-              <p className="text-xs text-gray-600">Current Agent</p>
-              <p className="text-xs font-semibold text-black">{selectedAgent.name}</p>
-            </div>
-            {user && userStats && (
-              <div className="text-right">
-                <p className="text-xs text-gray-600">Questions restantes</p>
-                <p className={`text-xs font-semibold ${userStats.remaining <= 1 ? 'text-red-600' : 'text-green-600'}`}>
-                  {userStats.remaining}/{userStats.questionsLimit}
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
@@ -293,12 +208,12 @@ export default function Home() {
             <div className="absolute -inset-1 bg-gradient-to-r from-black/20 to-black/5 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
 
             {/* Input container */}
-            <div className="relative bg-white border-2 border-black/20 rounded-xl p-3 md:p-5 hover:border-black/40 transition-all duration-300 focus-within:border-black focus-within:shadow-lg focus-within:shadow-black/10">
+            <div className="relative bg-white border-2 border-black/20 rounded-xl p-2.5 sm:p-3 md:p-5 hover:border-black/40 transition-all duration-300 focus-within:border-black focus-within:shadow-lg focus-within:shadow-black/10">
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={user ? "Ask anything... Describe your idea, ask a question, or request code..." : "Connectez-vous pour poser une question..."}
-                className="w-full bg-transparent text-black placeholder-gray-500 outline-none resize-none text-sm md:text-base leading-relaxed disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                className="w-full bg-transparent text-black placeholder-gray-500 outline-none resize-none text-xs sm:text-sm md:text-base leading-relaxed disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
                 rows="3"
                 maxLength="2000"
                 disabled={!user}
@@ -315,17 +230,22 @@ export default function Home() {
               )}
 
               {/* Footer with character count and submit */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-black/10">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3 pt-3 border-t border-black/10">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <span className="text-xs text-gray-500">{prompt.length}/2000</span>
+                  {user && userStats && (
+                    <span className={`text-xs font-semibold ${userStats.remaining <= 1 ? 'text-red-600' : 'text-green-600'}`}>
+                      Questions: {userStats.remaining}/{userStats.questionsLimit}
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
                   {/* Bouton Human Service */}
                   <button
                     type="button"
                     onClick={() => navigate('/human-service')}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm transition-all duration-300"
+                    className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 flex-1 sm:flex-initial"
                     title="Service d'entraide"
                   >
                     <Users className="w-3.5 h-3.5" />
@@ -336,7 +256,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setHistoryModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm transition-all duration-300"
+                    className="flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 flex-1 sm:flex-initial"
                     title="Historique des conversations"
                   >
                     <Clock className="w-3.5 h-3.5" />
@@ -348,7 +268,7 @@ export default function Home() {
                     <button
                       type="submit"
                       disabled={!prompt.trim()}
-                      className={`flex items-center gap-2 px-5 py-1.5 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                      className={`flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-5 py-1.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 flex-1 sm:flex-initial ${
                         prompt.trim()
                           ? 'bg-black text-white hover:bg-gray-800 hover:shadow-lg hover:shadow-black/30 cursor-pointer'
                           : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
@@ -361,7 +281,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={handleLoginClick}
-                      className="flex items-center gap-2 px-5 py-1.5 rounded-lg font-semibold text-sm transition-all duration-300 bg-gray-600 text-white hover:bg-gray-700 hover:shadow-lg hover:shadow-gray-600/30"
+                      className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-5 py-1.5 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 bg-gray-600 text-white hover:bg-gray-700 hover:shadow-lg hover:shadow-gray-600/30 flex-1 sm:flex-initial"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Connectez-vous</span>
@@ -372,32 +292,88 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Suggestions */}
-          {messages.length === 0 && (
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {user && [
-                'Explain quantum computing',
-                'Write a React component',
-                'Design a landing page',
-                'Debug this code',
-              ].map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setPrompt(suggestion)}
-                  className="p-2 text-left text-xs text-gray-600 border border-black/10 rounded-lg hover:border-black/30 hover:bg-black/5 transition-all duration-300 group"
-                >
-                  <span className="group-hover:text-black transition-colors">{suggestion}</span>
-                </button>
-              ))}
-            </div>
-          )}
+
         </form>
+
+        {/* Human Section Title */}
+        <div className="text-center my-6 sm:my-8 md:my-10">
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 bg-black/10 rounded-xl">
+              <Users className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-black" />
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold">
+              <span className="bg-gradient-to-r from-black via-gray-700 to-gray-500 bg-clip-text text-transparent">Or Get Everything from Human</span>
+            </h2>
+          </div>
+        </div>
+
+        {/* Creative Banners */}
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          {/* Banner 1: Pour les utilisateurs - Créer une demande */}
+          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-black via-gray-800 to-gray-700 p-4 sm:p-6 hover:shadow-2xl hover:shadow-black/50 transition-all duration-500 cursor-pointer border border-gray-700"
+               onClick={() => setCreateDemandeModalOpen(true)}>
+            {/* Animated background effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h3 className="text-base sm:text-xl font-bold text-white">Besoin d'aide humaine ?</h3>
+              </div>
+              
+              <p className="text-gray-200 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
+                L'IA ne suffit pas ? Créez une demande et obtenez l'aide d'experts humains qualifiés. 
+                Recevez des réponses personnalisées et des solutions adaptées à vos besoins.
+              </p>
+              
+              <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm group-hover:gap-3 transition-all">
+                <span>Créer une demande</span>
+                <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+            </div>
+
+            {/* Decorative elements */}
+            <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+            <div className="absolute -left-4 -top-4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
+          </div>
+
+          {/* Banner 2: Pour les humains - Voir les demandes */}
+          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-900 via-gray-700 to-gray-600 p-4 sm:p-6 hover:shadow-2xl hover:shadow-gray-800/50 transition-all duration-500 cursor-pointer border border-gray-600"
+               onClick={() => navigate('/demandes')}>
+            {/* Animated background effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                  <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h3 className="text-base sm:text-xl font-bold text-white">Vous êtes expert ?</h3>
+              </div>
+              
+              <p className="text-gray-200 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
+                Partagez vos connaissances et aidez la communauté ! Consultez les demandes d'aide, 
+                proposez vos services et gagnez de l'argent en résolvant des problèmes.
+              </p>
+              
+              <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm group-hover:gap-3 transition-all">
+                <span>Voir les demandes</span>
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+            </div>
+
+            {/* Decorative elements */}
+            <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+            <div className="absolute -left-4 -top-4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-black/10 backdrop-blur-md bg-white/40 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-gray-500">
+      <footer className="relative z-10 border-t border-black/10 backdrop-blur-md bg-white/40 py-2 sm:py-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 text-center text-[10px] sm:text-xs text-gray-500">
           <p>© 2025 FreeL AI. Powered by multiple AI agents. Always learning, always improving.</p>
         </div>
       </footer>
@@ -423,6 +399,15 @@ export default function Home() {
         onClose={() => setAuthModalOpen(false)}
         mode={authMode}
         onSubmit={handleAuthSubmit}
+      />
+
+      {/* Create Demande Modal */}
+      <CreateDemandeModal
+        open={createDemandeModalOpen}
+        onOpenChange={setCreateDemandeModalOpen}
+        onSuccess={() => {
+          console.log('Demande créée avec succès')
+        }}
       />
 
       {/* Custom scrollbar styles */}

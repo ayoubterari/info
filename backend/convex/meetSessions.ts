@@ -146,11 +146,25 @@ export const updatePaymentStatus = mutation({
 export const endMeetSession = mutation({
   args: {
     sessionId: v.id("meetSessions"),
+    isScam: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    // Mettre à jour le statut de la session
     await ctx.db.patch(args.sessionId, {
-      status: "completed",
+      status: args.isScam ? "cancelled" : "completed",
       endedAt: Date.now(),
+    });
+
+    // Mettre à jour le statut de la demande
+    const newDemandeStatus = args.isScam ? "cancelled" : "completed";
+    await ctx.db.patch(session.demandeId, {
+      status: newDemandeStatus,
+      updatedAt: Date.now(),
     });
 
     return { success: true };

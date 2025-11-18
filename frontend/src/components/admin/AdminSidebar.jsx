@@ -5,6 +5,7 @@ import {
   FileText, 
   Settings, 
   BarChart3,
+  DollarSign,
   LogOut,
   Menu,
   X
@@ -28,6 +29,16 @@ const menuItems = [
     title: 'Demandes',
     icon: FileText,
     href: '/admin/demandes',
+  },
+  {
+    title: 'Offres',
+    icon: FileText,
+    href: '/admin/offres',
+  },
+  {
+    title: 'Commissions',
+    icon: DollarSign,
+    href: '/admin/commissions',
   },
   {
     title: 'Statistiques',

@@ -24,8 +24,10 @@ export default function Payment() {
   // Récupérer les détails de l'offre et de la session
   const offre = useQuery(api.offres.getOffreById, offreId ? { id: offreId } : "skip")
   const meetSession = useQuery(api.meetSessions.getSessionById, sessionId ? { sessionId } : "skip")
+  const commissionRate = useQuery(api.appSettings.getCommissionRate)
   
   const updatePaymentStatus = useMutation(api.meetSessions.updatePaymentStatus)
+  const createTransaction = useMutation(api.transactions.createTransaction)
 
   useEffect(() => {
     if (!user) {
@@ -47,12 +49,27 @@ export default function Payment() {
       
       if (testCards.includes(cleanCardNumber)) {
         // Paiement réussi - Mettre à jour le statut
-        if (sessionId) {
+        if (sessionId && offreId && meetSession && offre) {
+          console.log('💳 Paiement réussi, mise à jour du statut...')
           await updatePaymentStatus({
             sessionId,
             paymentStatus: 'completed',
             paymentMethod: 'stripe_test'
           })
+
+          // ⚠️ IMPORTANT: Ne créer une transaction QUE si la session n'est pas annulée
+          // Si un scam est signalé plus tard, la transaction ne sera pas créée
+          console.log('💰 Préparation de la transaction...', {
+            sessionId,
+            offreId,
+            demandeurId: meetSession.demandeurId,
+            offreurId: meetSession.offreurId,
+            totalAmount: offre.proposedPrice,
+          })
+
+          // Note: La transaction sera créée à la fin du meet si tout se passe bien
+          // Pour l'instant, on marque juste le paiement comme complété
+          console.log('✅ Paiement enregistré (transaction sera créée à la fin du meet)')
         }
         
         setPaymentSuccess(true)
@@ -150,8 +167,27 @@ export default function Payment() {
                 </div>
                 
                 <div className="flex justify-between items-center py-3 border-b">
-                  <span className="text-gray-600">Prix</span>
-                  <span className="font-semibold text-xl">${offre.proposedPrice}</span>
+                  <span className="text-gray-600">Prix du service</span>
+                  <span className="font-semibold">${offre.proposedPrice}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-gray-600">Commission plateforme ({commissionRate || 10}%)</span>
+                  <span className="font-semibold text-orange-600">
+                    ${((offre.proposedPrice * (commissionRate || 10)) / 100).toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-3 border-b bg-gray-50 -mx-6 px-6">
+                  <span className="text-gray-900 font-bold">Total à payer</span>
+                  <span className="font-bold text-2xl text-gray-900">${offre.proposedPrice}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-3 border-b">
+                  <span className="text-gray-600">Le prestataire recevra</span>
+                  <span className="font-semibold text-green-600">
+                    ${(offre.proposedPrice - (offre.proposedPrice * (commissionRate || 10)) / 100).toFixed(2)}
+                  </span>
                 </div>
                 
                 <div className="flex justify-between items-center py-3 border-b">

@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 export default function Header() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('signin');
   const { user, signIn, signUp, signOut, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Vérifier le statut du compte Stripe de l'utilisateur
+  const accountStatus = useQuery(
+    api.stripeConnect.checkAccountStatus,
+    user?.userId ? { userId: user.userId } : "skip"
+  );
 
   const handleSignIn = () => {
     setAuthMode('signin');
@@ -75,6 +83,23 @@ export default function Header() {
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   Mes offres
+                </button>
+                
+                {/* Bouton Stripe Onboarding */}
+                <button
+                  onClick={() => navigate('/stripe-onboarding')}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    accountStatus?.onboardingComplete
+                      ? 'text-green-700 bg-green-50 hover:bg-green-100'
+                      : 'text-blue-700 bg-blue-50 hover:bg-blue-100 animate-pulse'
+                  }`}
+                >
+                  <CreditCard size={16} />
+                  {accountStatus?.onboardingComplete ? (
+                    'Paiements ✓'
+                  ) : (
+                    'Configurer paiements'
+                  )}
                 </button>
               </nav>
             )}

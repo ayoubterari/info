@@ -11,9 +11,15 @@ export default defineSchema({
     tokenIdentifier: v.optional(v.string()),
     questionsAsked: v.optional(v.number()), // Compteur de questions posées
     questionsLimit: v.optional(v.number()), // Limite de questions (par défaut 2)
+    // Stripe Connect fields
+    stripeConnectAccountId: v.optional(v.string()), // ID du compte Stripe Connect
+    stripeOnboardingComplete: v.optional(v.boolean()), // Onboarding terminé
+    stripeBankAccountLast4: v.optional(v.string()), // 4 derniers chiffres du compte bancaire
+    stripeAccountStatus: v.optional(v.string()), // active, pending, restricted
   })
     .index("by_email", ["email"])
-    .index("by_token", ["tokenIdentifier"]),
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_stripe_account", ["stripeConnectAccountId"]),
 
   // Table des articles/posts
   posts: defineTable({
@@ -103,5 +109,44 @@ export default defineSchema({
     .index("by_demande", ["demandeId"])
     .index("by_demandeur", ["demandeurId"])
     .index("by_offreur", ["offreurId"])
+    .index("by_status", ["status"]),
+
+  // Table des paramètres de l'application
+  appSettings: defineTable({
+    key: v.string(), // Clé unique du paramètre (ex: "commission_rate")
+    value: v.union(v.string(), v.number(), v.boolean()), // Valeur du paramètre
+    description: v.optional(v.string()), // Description du paramètre
+    updatedBy: v.optional(v.id("users")), // Qui a modifié en dernier
+    updatedAt: v.number(), // Date de dernière modification
+  })
+    .index("by_key", ["key"]),
+
+  // Table des transactions/commissions
+  transactions: defineTable({
+    sessionId: v.id("meetSessions"), // Référence à la session
+    offreId: v.id("offres"), // Référence à l'offre
+    demandeurId: v.id("users"), // Demandeur (qui paie)
+    offreurId: v.id("users"), // Prestataire (qui reçoit)
+    totalAmount: v.number(), // Montant total payé
+    commissionRate: v.number(), // Taux de commission appliqué (%)
+    commissionAmount: v.number(), // Montant de la commission
+    providerAmount: v.number(), // Montant reçu par le prestataire
+    // Stripe fields
+    stripePaymentIntentId: v.optional(v.string()), // ID du Payment Intent Stripe
+    stripeTransferId: v.optional(v.string()), // ID du Transfer Stripe vers le prestataire
+    stripePaymentMethod: v.optional(v.string()), // Méthode de paiement (card, bank_transfer, etc.)
+    stripeFees: v.optional(v.number()), // Frais Stripe (2.9% + $0.30)
+    status: v.union(
+      v.literal("pending"), 
+      v.literal("completed"), 
+      v.literal("refunded"),
+      v.literal("failed")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_demandeur", ["demandeurId"])
+    .index("by_offreur", ["offreurId"])
+    .index("by_stripe_payment", ["stripePaymentIntentId"])
     .index("by_status", ["status"]),
 });

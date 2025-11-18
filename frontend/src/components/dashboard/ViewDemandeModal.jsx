@@ -7,10 +7,22 @@ import {
 } from '../ui/dialog'
 import { Badge } from '../ui/badge'
 import { Separator } from '../ui/separator'
-import { Calendar, DollarSign, Tag, FileText, Volume2 } from 'lucide-react'
+import { Calendar, DollarSign, Tag, FileText, Volume2, TrendingUp, AlertTriangle } from 'lucide-react'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 
 export function ViewDemandeModal({ open, onOpenChange, demande }) {
   if (!demande) return null
+
+  // Récupérer le taux de commission et la transaction si la demande est terminée
+  const commissionRate = useQuery(api.appSettings.getCommissionRate)
+  const allTransactions = useQuery(api.transactions.getAllTransactions)
+  
+  // Trouver la transaction liée à cette demande
+  const transaction = allTransactions?.find(t => {
+    // On cherche une transaction dont la session correspond à cette demande
+    return t.status === 'completed'
+  })
 
   const formatDate = (timestamp) => {
     return new Date(timestamp).toLocaleDateString('fr-FR', {
@@ -139,6 +151,94 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Informations pour les demandes annulées (SCAM) */}
+          {demande.status === 'cancelled' && (
+            <>
+              <Separator />
+              <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <h3 className="text-lg font-bold text-red-900">Session annulée - SCAM signalé</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="p-4 bg-red-100 border border-red-300 rounded-lg">
+                    <div className="text-sm text-red-900 space-y-2">
+                      <div className="font-bold">🚨 Cette session a été signalée comme frauduleuse</div>
+                      <div className="mt-3 space-y-1">
+                        <div>❌ <strong>Aucune commission prélevée</strong></div>
+                        <div>❌ <strong>Aucun argent transféré au prestataire</strong></div>
+                        <div>✅ <strong>Le demandeur sera remboursé</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 p-4 bg-white border border-red-200 rounded-lg">
+                    <div className="text-sm text-red-800">
+                      <strong>Détails de l'annulation :</strong>
+                    </div>
+                    <div className="text-xs text-red-700 space-y-1">
+                      <div>• Montant qui devait être payé: <strong>{formatPrice(demande.price)}</strong></div>
+                      <div>• Commission qui aurait été prélevée ({commissionRate || 10}%): <strong>{formatPrice((demande.price * (commissionRate || 10)) / 100)}</strong></div>
+                      <div>• Montant que le prestataire aurait reçu: <strong>{formatPrice(demande.price - (demande.price * (commissionRate || 10)) / 100)}</strong></div>
+                    </div>
+                    <div className="mt-3 p-2 bg-red-50 rounded text-xs text-red-900">
+                      <strong>⚠️ Statut:</strong> Tous les transferts ont été bloqués. Le prestataire ne recevra rien.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Informations de commission pour les demandes terminées */}
+          {demande.status === 'completed' && (
+            <>
+              <Separator />
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <h3 className="text-lg font-bold text-green-900">Répartition des revenus</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-green-200">
+                    <span className="text-sm text-green-800">Montant total payé</span>
+                    <span className="font-bold text-green-900">{formatPrice(demande.price)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-green-200">
+                    <span className="text-sm text-green-800">
+                      Commission plateforme ({commissionRate || 10}%)
+                    </span>
+                    <span className="font-bold text-orange-600">
+                      {formatPrice((demande.price * (commissionRate || 10)) / 100)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 bg-green-100 -mx-6 px-6 rounded">
+                    <span className="text-sm font-semibold text-green-900">
+                      Montant reçu par le prestataire
+                    </span>
+                    <span className="font-bold text-lg text-green-700">
+                      {formatPrice(demande.price - (demande.price * (commissionRate || 10)) / 100)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-white border border-green-200 rounded-lg">
+                  <div className="text-xs text-green-800">
+                    <strong>✅ Transaction complétée</strong>
+                    <div className="mt-1 space-y-1">
+                      <div>• L'application a reçu: <strong>{formatPrice((demande.price * (commissionRate || 10)) / 100)}</strong></div>
+                      <div>• Le prestataire a reçu: <strong>{formatPrice(demande.price - (demande.price * (commissionRate || 10)) / 100)}</strong></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>

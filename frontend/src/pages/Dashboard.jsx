@@ -29,6 +29,7 @@ export default function Dashboard() {
   // Récupérer les statistiques réelles
   const stats = useQuery(api.dashboard.getUserStats, { userId: user?.userId })
   const recentActivity = useQuery(api.dashboard.getRecentActivity, { userId: user?.userId, limit: 5 })
+  const accountStatus = useQuery(api.stripeConnect.checkAccountStatus, user?.userId ? { userId: user.userId } : "skip")
 
   useEffect(() => {
     if (!loading && !user) {
@@ -60,6 +61,55 @@ export default function Dashboard() {
       <Header />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Alerte Stripe Onboarding */}
+        {accountStatus && !accountStatus.onboardingComplete && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 mb-1">
+                  💳 Configurez vos paiements pour recevoir de l'argent !
+                </h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  Pour recevoir des paiements en tant que prestataire, vous devez configurer votre compte Stripe Connect.
+                  C'est rapide et sécurisé !
+                </p>
+                <Button 
+                  onClick={() => navigate('/stripe-onboarding')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Configurer maintenant →
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {accountStatus?.onboardingComplete && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <div className="flex-1">
+                <span className="text-sm font-medium text-green-900">
+                  ✅ Votre compte de paiement est configuré ! Vous pouvez recevoir des paiements.
+                </span>
+              </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/stripe-onboarding')}
+                className="border-green-600 text-green-600 hover:bg-green-100"
+              >
+                Voir les détails
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="mb-8 flex items-center justify-between">
           <div>
