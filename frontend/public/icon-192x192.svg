@@ -1,6 +1,0 @@
-<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" rx="40" fill="#000000"/>
-  <path d="M96 48C69.49 48 48 69.49 48 96C48 122.51 69.49 144 96 144C122.51 144 144 122.51 144 96C144 69.49 122.51 48 96 48ZM96 132C76.12 132 60 115.88 60 96C60 76.12 76.12 60 96 60C115.88 60 132 76.12 132 96C132 115.88 115.88 132 96 132Z" fill="white"/>
-  <circle cx="96" cy="96" r="24" fill="white"/>
-  <text x="96" y="105" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">AI</text>
-</svg>
