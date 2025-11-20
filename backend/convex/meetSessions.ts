@@ -113,6 +113,7 @@ export const getSessionById = query({
     const demande = await ctx.db.get(session.demandeId);
     const demandeur = await ctx.db.get(session.demandeurId);
     const offreur = await ctx.db.get(session.offreurId);
+    const offre = await ctx.db.get(session.offreId);
 
     return {
       ...session,
@@ -120,6 +121,9 @@ export const getSessionById = query({
       duration: demande?.duration || 30,
       demandeurName: demandeur?.name || "Demandeur",
       helperName: offreur?.name || "Prestataire",
+      offre: offre ? {
+        proposedPrice: offre.proposedPrice,
+      } : null,
     };
   },
 });

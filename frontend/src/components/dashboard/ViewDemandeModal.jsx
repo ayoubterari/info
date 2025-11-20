@@ -18,6 +18,18 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
   const commissionRate = useQuery(api.appSettings.getCommissionRate)
   const allTransactions = useQuery(api.transactions.getAllTransactions)
   
+  // Récupérer les offres pour cette demande pour trouver l'offre acceptée
+  const offres = useQuery(
+    api.offres.getOffresByDemande,
+    demande ? { demandeId: demande._id } : "skip"
+  )
+  
+  // Trouver l'offre acceptée pour utiliser son prix
+  const acceptedOffre = offres?.find(o => o.status === 'accepted')
+  
+  // Utiliser le prix de l'offre acceptée, sinon le prix de la demande
+  const finalPrice = acceptedOffre?.proposedPrice || demande.price
+  
   // Trouver la transaction liée à cette demande
   const transaction = allTransactions?.find(t => {
     // On cherche une transaction dont la session correspond à cette demande
@@ -81,9 +93,16 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
             <div className="space-y-1">
               <div className="flex items-center text-sm text-gray-500">
                 <DollarSign className="mr-2 h-4 w-4" />
-                Prix proposé
+                Prix {acceptedOffre ? 'accepté' : 'proposé'}
               </div>
-              <div className="text-lg font-semibold">{formatPrice(demande.price)}</div>
+              <div className="flex items-center gap-2">
+                <div className="text-lg font-semibold">{formatPrice(finalPrice)}</div>
+                {acceptedOffre && acceptedOffre.proposedPrice !== demande.price && (
+                  <div className="text-xs text-gray-500">
+                    (initial: {formatPrice(demande.price)})
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1 col-span-2">
@@ -183,9 +202,9 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
                       <strong>Détails de l'annulation :</strong>
                     </div>
                     <div className="text-xs text-red-700 space-y-1">
-                      <div>• Montant qui devait être payé: <strong>{formatPrice(demande.price)}</strong></div>
-                      <div>• Commission qui aurait été prélevée ({commissionRate || 10}%): <strong>{formatPrice((demande.price * (commissionRate || 10)) / 100)}</strong></div>
-                      <div>• Montant que le prestataire aurait reçu: <strong>{formatPrice(demande.price - (demande.price * (commissionRate || 10)) / 100)}</strong></div>
+                      <div>• Montant qui devait être payé: <strong>{formatPrice(finalPrice)}</strong></div>
+                      <div>• Commission qui aurait été prélevée ({commissionRate || 10}%): <strong>{formatPrice((finalPrice * (commissionRate || 10)) / 100)}</strong></div>
+                      <div>• Montant que le prestataire aurait reçu: <strong>{formatPrice(finalPrice - (finalPrice * (commissionRate || 10)) / 100)}</strong></div>
                     </div>
                     <div className="mt-3 p-2 bg-red-50 rounded text-xs text-red-900">
                       <strong>⚠️ Statut:</strong> Tous les transferts ont été bloqués. Le prestataire ne recevra rien.
@@ -209,7 +228,7 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-green-200">
                     <span className="text-sm text-green-800">Montant total payé</span>
-                    <span className="font-bold text-green-900">{formatPrice(demande.price)}</span>
+                    <span className="font-bold text-green-900">{formatPrice(finalPrice)}</span>
                   </div>
                   
                   <div className="flex justify-between items-center py-2 border-b border-green-200">
@@ -217,7 +236,7 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
                       Commission plateforme ({commissionRate || 10}%)
                     </span>
                     <span className="font-bold text-orange-600">
-                      {formatPrice((demande.price * (commissionRate || 10)) / 100)}
+                      {formatPrice((finalPrice * (commissionRate || 10)) / 100)}
                     </span>
                   </div>
                   
@@ -226,7 +245,7 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
                       Montant reçu par le prestataire
                     </span>
                     <span className="font-bold text-lg text-green-700">
-                      {formatPrice(demande.price - (demande.price * (commissionRate || 10)) / 100)}
+                      {formatPrice(finalPrice - (finalPrice * (commissionRate || 10)) / 100)}
                     </span>
                   </div>
                 </div>
@@ -235,8 +254,8 @@ export function ViewDemandeModal({ open, onOpenChange, demande }) {
                   <div className="text-xs text-green-800">
                     <strong>✅ Transaction complétée</strong>
                     <div className="mt-1 space-y-1">
-                      <div>• L'application a reçu: <strong>{formatPrice((demande.price * (commissionRate || 10)) / 100)}</strong></div>
-                      <div>• Le prestataire a reçu: <strong>{formatPrice(demande.price - (demande.price * (commissionRate || 10)) / 100)}</strong></div>
+                      <div>• L'application a reçu: <strong>{formatPrice((finalPrice * (commissionRate || 10)) / 100)}</strong></div>
+                      <div>• Le prestataire a reçu: <strong>{formatPrice(finalPrice - (finalPrice * (commissionRate || 10)) / 100)}</strong></div>
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useAction } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -14,6 +14,7 @@ import {
 } from '@stream-io/video-react-sdk'
 import '@stream-io/video-react-sdk/dist/css/styles.css'
 import Header from '../components/Header'
+import ScamNotificationModal from '../components/ScamNotificationModal'
 import { Loader2, Video, Phone, Mic, MicOff, VideoIcon, VideoOff, Monitor, PhoneOff, Settings, Clock, AlertTriangle } from 'lucide-react'
 
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY
@@ -25,6 +26,8 @@ export default function MeetRoom() {
   const [client, setClient] = useState(null)
   const [call, setCall] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showScamModal, setShowScamModal] = useState(false)
+  const previousSessionStatusRef = useRef(null)
 
   const session = useQuery(api.meetSessions.getMeetSession, 
     sessionId ? { sessionId } : "skip"
@@ -33,14 +36,51 @@ export default function MeetRoom() {
   const endMeetSession = useMutation(api.meetSessions.endMeetSession)
   const createTransaction = useMutation(api.transactions.createTransaction)
 
-  // Vérifier si la session est finalisée
+  // Surveiller le statut de la session pour détecter les scams
   useEffect(() => {
-    if (session && session.status === 'completed') {
-      alert('This meeting has already ended.')
-      navigate('/mes-offres')
+    if (!session || !user) return
+
+    console.log('🔍 [MeetRoom] Vérification du statut de session:', {
+      status: session.status,
+      previousStatus: previousSessionStatusRef.current,
+      isDemandeur: session.demandeurId === user.userId
+    })
+
+    // Si c'est la première fois, stocker le statut
+    if (previousSessionStatusRef.current === null) {
+      previousSessionStatusRef.current = session.status
       return
     }
-  }, [session, navigate])
+
+    // Détecter si la session vient d'être annulée (scam signalé)
+    const wasActive = previousSessionStatusRef.current === 'active'
+    const isCancelled = session.status === 'cancelled'
+    const isProvider = session.offreurId === user.userId
+
+    if (wasActive && isCancelled && isProvider) {
+      console.log('🚨 [MeetRoom] SCAM DÉTECTÉ - Fermeture automatique pour le prestataire')
+      
+      // Déconnecter immédiatement le prestataire
+      if (call) {
+        call.leave().catch(console.error)
+      }
+      if (client) {
+        client.disconnectUser().catch(console.error)
+      }
+      
+      // Afficher le modal de notification
+      setShowScamModal(true)
+    }
+
+    // Si la session est complétée normalement
+    if (session.status === 'completed' && previousSessionStatusRef.current !== 'completed') {
+      alert('This meeting has ended successfully.')
+      navigate('/dashboard')
+    }
+
+    // Mettre à jour la référence
+    previousSessionStatusRef.current = session.status
+  }, [session, user, call, client, navigate])
 
   useEffect(() => {
     if (!user || !session) {
@@ -180,6 +220,16 @@ export default function MeetRoom() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header />
+      
+      {/* Modal de notification de scam */}
+      <ScamNotificationModal
+        isOpen={showScamModal}
+        onClose={() => setShowScamModal(false)}
+        sessionInfo={{
+          demandeTitle: session?.demande?.title,
+          proposedPrice: session?.offre?.proposedPrice
+        }}
+      />
       
       <div className="container mx-auto px-4 py-4">
         {/* Session Info */}
