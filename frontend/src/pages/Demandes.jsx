@@ -25,7 +25,14 @@ export default function Demandes() {
   ]
 
   const filteredDemandes = demandes?.filter(
-    (demande) => selectedCategory === 'all' || demande.category === selectedCategory
+    (demande) => {
+      // Exclure les demandes terminées ou annulées
+      if (demande.status === 'completed' || demande.status === 'cancelled') {
+        return false
+      }
+      // Filtrer par catégorie
+      return selectedCategory === 'all' || demande.category === selectedCategory
+    }
   )
 
   const getStatusBadge = (status) => {
