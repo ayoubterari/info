@@ -200,4 +200,26 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_date", ["createdAt"]),
+
+  // Table des notifications
+  notifications: defineTable({
+    userId: v.id("users"), // Destinataire de la notification
+    type: v.union(
+      v.literal("new_offre"), // Nouvelle offre reçue
+      v.literal("offre_accepted"), // Offre acceptée
+      v.literal("offre_rejected"), // Offre rejetée
+      v.literal("payment_received"), // Paiement reçu
+      v.literal("demande_completed"), // Demande terminée
+    ),
+    title: v.string(), // Titre de la notification
+    message: v.string(), // Message de la notification
+    relatedId: v.optional(v.string()), // ID de l'entité liée (offre, demande, etc.)
+    relatedType: v.optional(v.string()), // Type de l'entité liée
+    read: v.boolean(), // Notification lue ou non
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_read", ["read"])
+    .index("by_user_read", ["userId", "read"])
+    .index("by_date", ["createdAt"]),
 });

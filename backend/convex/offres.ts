@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // Créer une nouvelle offre d'aide
 export const createOffre = mutation({
@@ -16,6 +17,16 @@ export const createOffre = mutation({
       throw new Error("Vous devez être connecté pour proposer une offre");
     }
 
+    // Récupérer la demande pour obtenir l'ID du demandeur
+    const demande = await ctx.db.get(args.demandeId);
+    if (!demande) {
+      throw new Error("Demande introuvable");
+    }
+
+    // Récupérer les informations de l'utilisateur qui fait l'offre
+    const offreur = await ctx.db.get(args.userId);
+    const offreurName = offreur?.name || "Un utilisateur";
+
     const offreId = await ctx.db.insert("offres", {
       demandeId: args.demandeId,
       userId: args.userId,
@@ -25,6 +36,20 @@ export const createOffre = mutation({
       status: "pending",
       createdAt: Date.now(),
     });
+
+    // Créer une notification pour le demandeur
+    if (demande.userId) {
+      await ctx.db.insert("notifications", {
+        userId: demande.userId,
+        type: "new_offre",
+        title: "Nouvelle offre reçue !",
+        message: `${offreurName} a proposé son aide pour "${demande.title}" au prix de ${args.proposedPrice.toFixed(2)}€`,
+        relatedId: offreId,
+        relatedType: "offre",
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
 
     return offreId;
   },

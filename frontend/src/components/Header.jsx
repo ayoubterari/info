@@ -3,6 +3,7 @@ import { User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
 import InstallButton from './InstallButton';
+import NotificationBell from './NotificationBell';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Header() {
@@ -87,6 +88,7 @@ export default function Header() {
 
             {/* Auth Buttons */}
             <div className="flex items-center space-x-3">
+              {user && <NotificationBell />}
               <InstallButton />
               {loading ? (
                 <div className="px-4 py-2 text-gray-500">Loading...</div>
