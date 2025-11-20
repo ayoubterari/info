@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -17,29 +18,45 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
   // Log pour débogage
   useEffect(() => {
     console.log('🎯 [PaymentStatusModal] État:', { isOpen, sessionId, session })
+    
+    // Test de visibilité sur mobile
+    if (isOpen) {
+      setTimeout(() => {
+        const modalElement = document.querySelector('[data-payment-modal="true"]')
+        if (modalElement) {
+          const rect = modalElement.getBoundingClientRect()
+          console.log('📐 [PaymentStatusModal] Position du modal:', {
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            visible: rect.width > 0 && rect.height > 0
+          })
+        } else {
+          console.error('❌ [PaymentStatusModal] Modal non trouvé dans le DOM!')
+        }
+      }, 100)
+    }
   }, [isOpen, sessionId, session])
 
   // Gérer le scroll du body quand le modal est ouvert
   useEffect(() => {
     if (isOpen) {
       console.log('📱 [PaymentStatusModal] Modal ouvert - Blocage du scroll')
+      const scrollY = window.scrollY
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
-      document.body.style.top = '0'
-    } else {
-      console.log('📱 [PaymentStatusModal] Modal fermé - Déblocage du scroll')
-      document.body.style.overflow = ''
-      document.body.style.position = ''
-      document.body.style.width = ''
-      document.body.style.top = ''
-    }
-    
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.position = ''
-      document.body.style.width = ''
-      document.body.style.top = ''
+      document.body.style.top = `-${scrollY}px`
+      
+      return () => {
+        console.log('📱 [PaymentStatusModal] Modal fermé - Déblocage du scroll')
+        document.body.style.overflow = ''
+        document.body.style.position = ''
+        document.body.style.width = ''
+        document.body.style.top = ''
+        window.scrollTo(0, scrollY)
+      }
     }
   }, [isOpen])
 
@@ -56,8 +73,9 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
 
   if (!isOpen) return null
 
-  return (
+  const modalContent = (
     <div 
+      data-payment-modal="true"
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4"
       style={{
         position: 'fixed',
@@ -65,9 +83,13 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
         left: 0,
         right: 0,
         bottom: 0,
+        width: '100vw',
+        height: '100vh',
         overflow: 'auto',
         WebkitOverflowScrolling: 'touch',
-        touchAction: 'none'
+        touchAction: 'pan-y',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)'
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
@@ -75,7 +97,14 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
         }
       }}
     >
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div 
+        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+        style={{
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
         {/* Header */}
         <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
           <button
@@ -186,4 +215,6 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }

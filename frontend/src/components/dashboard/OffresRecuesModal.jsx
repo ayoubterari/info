@@ -50,12 +50,19 @@ export function OffresRecuesModal({ open, onOpenChange, demandeId, demandeTitle 
 
   const handleAcceptOffre = async (offreId) => {
     try {
+      console.log('🔄 [OffresRecuesModal] Acceptation de l\'offre:', offreId)
       const result = await updateOffreStatus({ offreId, status: 'accepted' })
       
+      console.log('✅ [OffresRecuesModal] Résultat:', result)
+      
       if (result?.meetSessionId) {
-        // Fermer le modal et rediriger vers le meet
+        // Fermer le modal et rediriger vers la page de paiement
         onOpenChange(false)
-        navigate(`/meet/${result.meetSessionId}`)
+        console.log('💳 [OffresRecuesModal] Redirection vers paiement:', {
+          offreId,
+          sessionId: result.meetSessionId
+        })
+        navigate(`/payment?offreId=${offreId}&sessionId=${result.meetSessionId}`)
       }
     } catch (error) {
       console.error('Error accepting offre:', error)

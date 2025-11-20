@@ -14,6 +14,12 @@ export default function Payment() {
   const offreId = searchParams.get('offreId')
   const sessionId = searchParams.get('sessionId')
   
+  console.log('🔍 [Payment] URL params bruts:', { 
+    offreId: searchParams.get('offreId'), 
+    sessionId: searchParams.get('sessionId'),
+    allParams: Object.fromEntries(searchParams.entries())
+  })
+  
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [cardNumber, setCardNumber] = useState('')
@@ -28,8 +34,15 @@ export default function Payment() {
   
   const updatePaymentStatus = useMutation(api.meetSessions.updatePaymentStatus)
 
+  // Logs de débogage
+  useEffect(() => {
+    console.log('💳 [Payment] Paramètres:', { offreId, sessionId })
+    console.log('💳 [Payment] Données:', { offre, meetSession, user })
+  }, [offreId, sessionId, offre, meetSession, user])
+
   useEffect(() => {
     if (!user) {
+      console.log('⚠️ [Payment] Pas d\'utilisateur, redirection vers /')
       navigate('/')
     }
   }, [user, navigate])
@@ -95,10 +108,34 @@ export default function Payment() {
     return chunks ? chunks.join(' ') : cleaned
   }
 
-  if (!offre || !meetSession) {
+  // Vérifier si les paramètres sont présents
+  if (!offreId || !sessionId) {
+    console.error('❌ [Payment] Paramètres manquants:', { offreId, sessionId })
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Paramètres manquants</h2>
+          <p className="text-gray-600 mb-4">Les informations de paiement sont incomplètes.</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+          >
+            Retour au tableau de bord
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!offre || !meetSession) {
+    console.log('⏳ [Payment] Chargement des données...', { offre, meetSession })
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-600">Chargement des informations de paiement...</p>
+        </div>
       </div>
     )
   }
@@ -107,8 +144,8 @@ export default function Payment() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-2xl mx-auto px-4 py-12">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+        <div className="max-w-2xl mx-auto px-4 py-6 md:py-12">
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
@@ -150,8 +187,8 @@ export default function Payment() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <div className="grid md:grid-cols-2 gap-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* Instructions et détails */}
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-lg p-6">
