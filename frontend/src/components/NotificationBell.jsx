@@ -4,12 +4,14 @@ import { api } from '../../convex/_generated/api'
 import { useAuth } from '../contexts/AuthContext'
 import { Bell, X, Check, CheckCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { requestNotificationPermission } from '../utils/registerServiceWorker'
 
 export default function NotificationBell() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState('default')
+  const [swRegistration, setSwRegistration] = useState(null)
   const dropdownRef = useRef(null)
   const previousNotificationsRef = useRef(null)
 
@@ -27,17 +29,32 @@ export default function NotificationBell() {
   const markAsRead = useMutation(api.notifications.markNotificationAsRead)
   const markAllAsRead = useMutation(api.notifications.markAllNotificationsAsRead)
 
-  // Demander la permission pour les notifications
+  // Initialiser le Service Worker et demander la permission
   useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationPermission(Notification.permission)
-      
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
+    const initNotifications = async () => {
+      // Récupérer l'enregistrement du Service Worker
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready
+          setSwRegistration(registration)
+          console.log('✅ Service Worker prêt pour les notifications')
+        } catch (error) {
+          console.error('❌ Erreur Service Worker:', error)
+        }
+      }
+
+      // Demander la permission pour les notifications
+      if ('Notification' in window) {
+        setNotificationPermission(Notification.permission)
+        
+        if (Notification.permission === 'default') {
+          const permission = await requestNotificationPermission()
           setNotificationPermission(permission)
-        })
+        }
       }
     }
+
+    initNotifications()
   }, [])
 
   // Afficher une notification push lorsqu'une nouvelle notification arrive
@@ -57,33 +74,48 @@ export default function NotificationBell() {
     )
 
     // Afficher une notification push pour chaque nouvelle notification
-    if (newNotifications.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
-      newNotifications.forEach(notif => {
+    if (newNotifications.length > 0 && Notification.permission === 'granted') {
+      newNotifications.forEach(async (notif) => {
         try {
-          const notification = new Notification(notif.title, {
-            body: notif.message,
-            icon: '/favicon.ico',
-            tag: notif._id,
-            requireInteraction: false,
-          })
+          // Utiliser le Service Worker si disponible (meilleur support mobile)
+          if (swRegistration) {
+            await swRegistration.showNotification(notif.title, {
+              body: notif.message,
+              icon: '/icon-192x192.png',
+              badge: '/icon-192x192.png',
+              tag: notif._id,
+              requireInteraction: false,
+              vibrate: [200, 100, 200],
+              data: {
+                notificationId: notif._id,
+                relatedType: notif.relatedType,
+                url: notif.relatedType === 'offre' ? '/mes-demandes' : '/',
+              },
+            })
+            console.log('✅ Notification affichée via Service Worker')
+          } else {
+            // Fallback: Notification API classique (desktop)
+            const notification = new Notification(notif.title, {
+              body: notif.message,
+              icon: '/icon-192x192.png',
+              tag: notif._id,
+              requireInteraction: false,
+            })
 
-          notification.onclick = () => {
-            // Marquer comme lue
-            markAsRead({ notificationId: notif._id })
-            
-            // Naviguer vers la page appropriée
-            if (notif.relatedType === 'offre') {
-              navigate('/mes-demandes')
+            notification.onclick = () => {
+              markAsRead({ notificationId: notif._id })
+              if (notif.relatedType === 'offre') {
+                navigate('/mes-demandes')
+              }
+              window.focus()
+              notification.close()
             }
-            
-            window.focus()
-            notification.close()
-          }
 
-          // Auto-fermer après 5 secondes
-          setTimeout(() => notification.close(), 5000)
+            setTimeout(() => notification.close(), 5000)
+            console.log('✅ Notification affichée via Notification API')
+          }
         } catch (error) {
-          console.warn('Erreur lors de l\'affichage de la notification:', error)
+          console.warn('⚠️ Erreur lors de l\'affichage de la notification:', error)
         }
       })
     }

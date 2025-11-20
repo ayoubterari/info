@@ -18,6 +18,7 @@ import type * as demandes from "../demandes.js";
 import type * as files from "../files.js";
 import type * as meetSessions from "../meetSessions.js";
 import type * as migrations from "../migrations.js";
+import type * as notifications from "../notifications.js";
 import type * as offres from "../offres.js";
 import type * as openai from "../openai.js";
 import type * as payments from "../payments.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   meetSessions: typeof meetSessions;
   migrations: typeof migrations;
+  notifications: typeof notifications;
   offres: typeof offres;
   openai: typeof openai;
   payments: typeof payments;

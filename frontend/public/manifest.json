@@ -3,10 +3,13 @@
   "short_name": "FreeL AI",
   "description": "Ask anything to AI or get help from human experts",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "orientation": "portrait-primary",
+  "categories": ["productivity", "social", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -20,5 +23,37 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Mes demandes",
+      "short_name": "Demandes",
+      "description": "Voir mes demandes d'aide",
+      "url": "/mes-demandes",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mes offres",
+      "short_name": "Offres",
+      "description": "Voir mes offres proposées",
+      "url": "/mes-offres",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    "notifications"
   ]
 }
