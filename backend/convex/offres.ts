@@ -188,8 +188,11 @@ export const getOffresProposees = query({
         let paymentCompleted = false;
         if (offre.status === "accepted" && offre.meetSessionId) {
           meetSessionId = offre.meetSessionId;
-          // Vérifier le statut de paiement
-          const session = await ctx.db.get(offre.meetSessionId as any);
+          // Vérifier le statut de paiement en cherchant la session
+          const session = await ctx.db
+            .query("meetSessions")
+            .filter((q) => q.eq(q.field("offreId"), offre._id))
+            .first();
           if (session && session.paymentStatus === "completed") {
             paymentCompleted = true;
           }
@@ -341,6 +344,24 @@ export const updateOffreStatus = mutation({
       const demande = await ctx.db.get(offre.demandeId);
       if (!demande || !demande.userId) {
         throw new Error("Demande or demandeur not found");
+      }
+
+      // Vérifier si une session existe déjà pour cette offre
+      if (offre.meetSessionId) {
+        console.log("Session already exists for this offer:", offre.meetSessionId);
+        // Récupérer la session existante
+        const existingSession = await ctx.db
+          .query("meetSessions")
+          .filter((q) => q.eq(q.field("offreId"), args.offreId))
+          .first();
+        
+        if (existingSession) {
+          return { 
+            success: true, 
+            meetSessionId: existingSession._id, 
+            callId: existingSession.callId 
+          };
+        }
       }
 
       // Générer un ID unique pour l'appel (max 64 caractères)
