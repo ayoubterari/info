@@ -14,6 +14,35 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
     sessionId ? { sessionId } : "skip"
   )
 
+  // Log pour débogage
+  useEffect(() => {
+    console.log('🎯 [PaymentStatusModal] État:', { isOpen, sessionId, session })
+  }, [isOpen, sessionId, session])
+
+  // Gérer le scroll du body quand le modal est ouvert
+  useEffect(() => {
+    if (isOpen) {
+      console.log('📱 [PaymentStatusModal] Modal ouvert - Blocage du scroll')
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.top = '0'
+    } else {
+      console.log('📱 [PaymentStatusModal] Modal fermé - Déblocage du scroll')
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+      document.body.style.top = ''
+    }
+    
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.width = ''
+      document.body.style.top = ''
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (session?.paymentStatus === 'completed') {
       setShowJoinButton(true)
@@ -28,7 +57,24 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'none'
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose()
+        }
+      }}
+    >
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">

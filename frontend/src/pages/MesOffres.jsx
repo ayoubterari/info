@@ -21,13 +21,17 @@ export default function MesOffres() {
   // Surveiller les offres acceptées pour ouvrir automatiquement le modal
   useEffect(() => {
     if (offres) {
+      console.log('🔍 [MesOffres] Vérification des offres:', offres)
       const acceptedOffre = offres.find(
         offre => offre.status === 'accepted' && 
         offre.meetSessionId && 
         !offre.paymentCompleted
       )
       
+      console.log('🔍 [MesOffres] Offre acceptée trouvée:', acceptedOffre)
+      
       if (acceptedOffre && acceptedOffre.meetSessionId) {
+        console.log('✅ [MesOffres] Ouverture du modal de paiement pour session:', acceptedOffre.meetSessionId)
         setSelectedSessionId(acceptedOffre.meetSessionId)
         setPaymentModalOpen(true)
       }

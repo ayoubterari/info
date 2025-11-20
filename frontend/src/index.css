@@ -16,6 +16,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Styles pour améliorer le rendu des modals sur mobile */
+@media (max-width: 768px) {
+  /* S'assurer que les modals sont toujours visibles sur mobile */
+  [data-radix-portal] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 9998 !important;
+  }
+  
+  /* Optimiser le scroll tactile */
+  [data-radix-dialog-overlay],
+  [data-radix-dialog-content] {
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
 @keyframes slide-in {
   from {
     transform: translateX(100%);
