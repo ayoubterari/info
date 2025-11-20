@@ -32,8 +32,11 @@ export default function MesOffres() {
       
       if (acceptedOffre && acceptedOffre.meetSessionId) {
         console.log('✅ [MesOffres] Ouverture du modal de paiement pour session:', acceptedOffre.meetSessionId)
-        setSelectedSessionId(acceptedOffre.meetSessionId)
-        setPaymentModalOpen(true)
+        // Délai pour s'assurer que la page est complètement chargée (important pour mobile)
+        setTimeout(() => {
+          setSelectedSessionId(acceptedOffre.meetSessionId)
+          setPaymentModalOpen(true)
+        }, 300)
       }
     }
   }, [offres])
@@ -92,6 +95,14 @@ export default function MesOffres() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      
+      {/* Debug info for mobile */}
+      {console.log('📱 [MesOffres] Rendu de la page:', { 
+        userExists: !!user, 
+        offresCount: offres?.length,
+        paymentModalOpen,
+        selectedSessionId 
+      })}
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
@@ -245,12 +256,18 @@ export default function MesOffres() {
         </div>
       </div>
 
-      {/* Payment Status Modal */}
-      <PaymentStatusModal
-        isOpen={paymentModalOpen}
-        onClose={() => setPaymentModalOpen(false)}
-        sessionId={selectedSessionId}
-      />
+      {/* Payment Status Modal - Seulement si sessionId existe */}
+      {selectedSessionId && (
+        <PaymentStatusModal
+          isOpen={paymentModalOpen}
+          onClose={() => {
+            console.log('🔴 [MesOffres] Fermeture du modal')
+            setPaymentModalOpen(false)
+            setSelectedSessionId(null)
+          }}
+          sessionId={selectedSessionId}
+        />
+      )}
     </div>
   )
 }

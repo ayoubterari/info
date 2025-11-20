@@ -8,6 +8,7 @@ import { X, Loader2, CreditCard, Video, CheckCircle } from 'lucide-react'
 export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
   const navigate = useNavigate()
   const [showJoinButton, setShowJoinButton] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Récupérer le statut de la session en temps réel
   const session = useQuery(
@@ -15,9 +16,16 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
     sessionId ? { sessionId } : "skip"
   )
 
+  // Gérer l'état de chargement
+  useEffect(() => {
+    if (session !== undefined) {
+      setIsLoading(false)
+    }
+  }, [session])
+
   // Log pour débogage
   useEffect(() => {
-    console.log('🎯 [PaymentStatusModal] État:', { isOpen, sessionId, session })
+    console.log('🎯 [PaymentStatusModal] État:', { isOpen, sessionId, session, isLoading })
     
     // Test de visibilité sur mobile
     if (isOpen) {
@@ -72,6 +80,12 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
   }
 
   if (!isOpen) return null
+
+  // Si pas de sessionId, afficher une erreur
+  if (!sessionId) {
+    console.error('❌ [PaymentStatusModal] Pas de sessionId fourni')
+    return null
+  }
 
   const modalContent = (
     <div 
@@ -133,7 +147,22 @@ export default function PaymentStatusModal({ isOpen, onClose, sessionId }) {
 
         {/* Content */}
         <div className="p-6">
-          {!showJoinButton ? (
+          {isLoading ? (
+            // Chargement initial
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Loader2 className="w-10 h-10 text-gray-600 animate-spin" />
+              </div>
+              
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Chargement...
+              </h3>
+              
+              <p className="text-gray-600">
+                Récupération des informations de la session
+              </p>
+            </div>
+          ) : !showJoinButton ? (
             // En attente de paiement
             <div className="text-center py-8">
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
