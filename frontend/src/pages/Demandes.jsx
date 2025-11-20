@@ -71,7 +71,7 @@ export default function Demandes() {
         <div className="max-w-7xl mx-auto">
           {/* Back Button */}
           <button
-            onClick={() => navigate('/human-service')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 mb-6 text-gray-600 hover:text-black transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
