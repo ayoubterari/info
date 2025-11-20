@@ -71,14 +71,14 @@ export function DemandesTab() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <CardTitle>Mes Demandes d'Aide</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base sm:text-lg">Mes Demandes d'Aide</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Liste de toutes vos demandes d'aide
                 </CardDescription>
               </div>
-              <Button onClick={() => setCreateModalOpen(true)}>
+              <Button onClick={() => setCreateModalOpen(true)} className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Nouvelle demande
               </Button>
@@ -105,77 +105,129 @@ export function DemandesTab() {
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead>Prix</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-center">Offres</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {demandes.map((demande) => (
-                    <TableRow key={demande._id}>
-                      <TableCell className="font-medium">
-                        {demande.title}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{demande.category}</Badge>
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {formatPrice(demande.price)}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(demande.status)}
-                      </TableCell>
-                      <TableCell className="text-gray-500 text-sm">
-                        {formatDate(demande.createdAt)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewOffres(demande)}
-                        >
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Voir les offres
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDemande(demande)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+            <>
+              {/* Vue mobile - Cartes */}
+              <div className="block sm:hidden space-y-3">
+                {demandes.map((demande) => (
+                  <div key={demande._id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">{demande.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs">{demande.category}</Badge>
+                          {getStatusBadge(demande.status)}
                         </div>
-                      </TableCell>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-sm">{formatPrice(demande.price)}</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatDate(demande.createdAt)}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewOffres(demande)}
+                        className="flex-1 text-xs"
+                      >
+                        <MessageSquare className="mr-1 h-3 w-3" />
+                        Offres
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDemande(demande)}
+                        className="text-xs"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Vue desktop - Tableau */}
+              <div className="hidden sm:block rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Titre</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead>Prix</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-center">Offres</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {demandes.map((demande) => (
+                      <TableRow key={demande._id}>
+                        <TableCell className="font-medium">
+                          {demande.title}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{demande.category}</Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {formatPrice(demande.price)}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(demande.status)}
+                        </TableCell>
+                        <TableCell className="text-gray-500 text-sm">
+                          {formatDate(demande.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewOffres(demande)}
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Voir les offres
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewDemande(demande)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Statistiques */}
       {demandes && demandes.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>

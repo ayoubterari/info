@@ -56,8 +56,8 @@ export function OffresTab() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Mes Offres Envoyées</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-base sm:text-lg">Mes Offres Envoyées</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Liste de toutes les offres que vous avez proposées
               </CardDescription>
             </div>
@@ -81,86 +81,137 @@ export function OffresTab() {
               </p>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Demande</TableHead>
-                    <TableHead>Catégorie</TableHead>
-                    <TableHead>Prix initial</TableHead>
-                    <TableHead>Prix proposé</TableHead>
-                    <TableHead>Statut offre</TableHead>
-                    <TableHead>Statut demande</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-center">Détails</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {offres.map((offre) => (
-                    <TableRow key={offre._id}>
-                      <TableCell className="font-medium max-w-xs">
-                        <div className="truncate" title={offre.demande?.title}>
+            <>
+              {/* Vue mobile - Cartes */}
+              <div className="block sm:hidden space-y-3">
+                {offres.map((offre) => (
+                  <div key={offre._id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">
                           {offre.demande?.title || 'Demande supprimée'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {offre.demande?.category ? (
-                          <Badge variant="secondary">{offre.demande.category}</Badge>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-semibold text-gray-600">
-                        {offre.demande?.price ? formatPrice(offre.demande.price) : '-'}
-                      </TableCell>
-                      <TableCell className="font-semibold text-green-600">
-                        {formatPrice(offre.proposedPrice)}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(offre.status)}
-                      </TableCell>
-                      <TableCell>
-                        {offre.demande?.status ? (
-                          getDemandeStatusBadge(offre.demande.status)
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-gray-500 text-sm">
-                        {formatDate(offre.createdAt)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {offre.message && (
-                            <div className="group relative">
-                              <MessageSquare className="h-4 w-4 text-gray-500 cursor-help" />
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                Message inclus
-                              </div>
-                            </div>
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {offre.demande?.category && (
+                            <Badge variant="secondary" className="text-xs">{offre.demande.category}</Badge>
                           )}
-                          {offre.audioUrl && (
-                            <div className="group relative">
-                              <Volume2 className="h-4 w-4 text-gray-500 cursor-help" />
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                Audio inclus
-                              </div>
-                            </div>
-                          )}
+                          {getStatusBadge(offre.status)}
                         </div>
-                      </TableCell>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-gray-500">Prix initial:</span>
+                        <div className="font-semibold text-gray-600">
+                          {offre.demande?.price ? formatPrice(offre.demande.price) : '-'}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Prix proposé:</span>
+                        <div className="font-bold text-green-600">
+                          {formatPrice(offre.proposedPrice)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="text-gray-500">{formatDate(offre.createdAt)}</div>
+                      <div className="flex items-center gap-2">
+                        {offre.message && <MessageSquare className="h-3 w-3 text-gray-500" />}
+                        {offre.audioUrl && <Volume2 className="h-3 w-3 text-gray-500" />}
+                      </div>
+                    </div>
+                    {offre.demande?.status && (
+                      <div className="pt-2 border-t">
+                        <span className="text-xs text-gray-500">Statut demande: </span>
+                        {getDemandeStatusBadge(offre.demande.status)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Vue desktop - Tableau */}
+              <div className="hidden sm:block rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Demande</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead>Prix initial</TableHead>
+                      <TableHead>Prix proposé</TableHead>
+                      <TableHead>Statut offre</TableHead>
+                      <TableHead>Statut demande</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-center">Détails</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {offres.map((offre) => (
+                      <TableRow key={offre._id}>
+                        <TableCell className="font-medium max-w-xs">
+                          <div className="truncate" title={offre.demande?.title}>
+                            {offre.demande?.title || 'Demande supprimée'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {offre.demande?.category ? (
+                            <Badge variant="secondary">{offre.demande.category}</Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-semibold text-gray-600">
+                          {offre.demande?.price ? formatPrice(offre.demande.price) : '-'}
+                        </TableCell>
+                        <TableCell className="font-semibold text-green-600">
+                          {formatPrice(offre.proposedPrice)}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(offre.status)}
+                        </TableCell>
+                        <TableCell>
+                          {offre.demande?.status ? (
+                            getDemandeStatusBadge(offre.demande.status)
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-gray-500 text-sm">
+                          {formatDate(offre.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            {offre.message && (
+                              <div className="group relative">
+                                <MessageSquare className="h-4 w-4 text-gray-500 cursor-help" />
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  Message inclus
+                                </div>
+                              </div>
+                            )}
+                            {offre.audioUrl && (
+                              <div className="group relative">
+                                <Volume2 className="h-4 w-4 text-gray-500 cursor-help" />
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                  Audio inclus
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Statistiques */}
       {offres && offres.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total</CardDescription>

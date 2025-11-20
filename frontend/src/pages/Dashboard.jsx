@@ -60,15 +60,15 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-4 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 mt-1">Bienvenue, {user.name}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+            <p className="text-gray-500 mt-1 text-sm sm:text-base">Bienvenue, {user.name}</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button onClick={() => navigate('/')}>
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <Button onClick={() => navigate('/')} className="flex-1 sm:flex-none">
               <Home className="mr-2 h-4 w-4" />
               Accueil
             </Button>
@@ -76,30 +76,53 @@ export default function Dashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="wallet">
-              <Wallet className="mr-2 h-4 w-4" />
-              Wallet
-            </TabsTrigger>
-            <TabsTrigger value="profile">Mon Profil</TabsTrigger>
-            <TabsTrigger value="demandes">Mes Demandes</TabsTrigger>
-            <TabsTrigger value="offres">Mes Offres</TabsTrigger>
-            <TabsTrigger value="analytics">Analytiques</TabsTrigger>
-          </TabsList>
+          {/* Tabs scrollables sur mobile */}
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="inline-flex w-auto min-w-full sm:w-full">
+              <TabsTrigger value="overview" className="whitespace-nowrap text-xs sm:text-sm">
+                <BarChart3 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Vue d'ensemble</span>
+                <span className="sm:hidden">Vue</span>
+              </TabsTrigger>
+              <TabsTrigger value="wallet" className="whitespace-nowrap text-xs sm:text-sm">
+                <Wallet className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Wallet
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="whitespace-nowrap text-xs sm:text-sm">
+                <User className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Mon Profil</span>
+                <span className="sm:hidden">Profil</span>
+              </TabsTrigger>
+              <TabsTrigger value="demandes" className="whitespace-nowrap text-xs sm:text-sm">
+                <MessageSquare className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Mes Demandes</span>
+                <span className="sm:hidden">Demandes</span>
+              </TabsTrigger>
+              <TabsTrigger value="offres" className="whitespace-nowrap text-xs sm:text-sm">
+                <Send className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Mes Offres</span>
+                <span className="sm:hidden">Offres</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="whitespace-nowrap text-xs sm:text-sm">
+                <TrendingUp className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Analytiques</span>
+                <span className="sm:hidden">Stats</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Mes Demandes
                   </CardTitle>
-                  <MessageSquare className="h-4 w-4 text-gray-500" />
+                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats?.totalDemandes || 0}</div>
-                  <p className="text-xs text-gray-500">
+                  <div className="text-xl sm:text-2xl font-bold">{stats?.totalDemandes || 0}</div>
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {stats?.demandesPending || 0} en attente • {stats?.demandesCompleted || 0} terminées
                   </p>
                 </CardContent>
@@ -107,14 +130,14 @@ export default function Dashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Offres Reçues
                   </CardTitle>
-                  <TrendingUp className="h-4 w-4 text-gray-500" />
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats?.totalOffresRecues || 0}</div>
-                  <p className="text-xs text-gray-500">
+                  <div className="text-xl sm:text-2xl font-bold">{stats?.totalOffresRecues || 0}</div>
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {stats?.offresRecuesPending || 0} en attente • {stats?.offresRecuesAccepted || 0} acceptées
                   </p>
                 </CardContent>
@@ -122,12 +145,12 @@ export default function Dashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Offres Envoyées</CardTitle>
-                  <Send className="h-4 w-4 text-gray-500" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">Offres Envoyées</CardTitle>
+                  <Send className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats?.totalOffresEnvoyees || 0}</div>
-                  <p className="text-xs text-gray-500">
+                  <div className="text-xl sm:text-2xl font-bold">{stats?.totalOffresEnvoyees || 0}</div>
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {stats?.offresEnvoyeesAccepted || 0} acceptées • {stats?.offresEnvoyeesRejected || 0} refusées
                   </p>
                 </CardContent>
@@ -135,33 +158,33 @@ export default function Dashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Montant Total
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-gray-500" />
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl sm:text-2xl font-bold">
                     ${((stats?.totalMontantDemandes || 0) + (stats?.totalMontantOffresRecues || 0)).toFixed(2)}
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     Demandes + Offres reçues
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="col-span-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-7">
+              <Card className="lg:col-span-4">
                 <CardHeader>
-                  <CardTitle>Vue d'ensemble</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Vue d'ensemble</CardTitle>
                 </CardHeader>
                 <CardContent className="pl-2">
                   <Overview />
                 </CardContent>
               </Card>
 
-              <Card className="col-span-3">
+              <Card className="lg:col-span-3">
                 <CardHeader>
                   <CardTitle>Activités Récentes</CardTitle>
                   <CardDescription>
